@@ -1,7 +1,6 @@
-fastfetch
-
 Invoke-Expression (&starship init powershell)
 $ENV:STARSHIP_CONFIG = "$HOME\starship.toml"
+fastfetch
 
 # git repository greeter
 $global:lastRepository = $null
