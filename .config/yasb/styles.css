@@ -95,6 +95,38 @@
 	margin: 0 2px 1px 0;
     color: var(--yellow);
 }
+.weather-card {
+    background-color: rgba(17, 17, 27, 0.5);
+}
+.weather-card-today {
+    border: 1px solid #282936;
+    border-radius: 8px;
+    background-color:  rgba(17, 17, 27, 0.2);
+}
+.weather-card-today .label {
+    font-size: 12px;
+}
+.weather-card-today .label.location {
+    font-size: 24px;
+    font-weight: 700;
+}
+.weather-card-today .label.arert {
+    font-size: 12px;
+    font-weight: 700;
+    background-color: rgba(247, 199, 42, 0.05);
+    border: 1px solid rgba(247, 209, 42, 0.1);
+    color: rgba(196, 181, 162, 0.85);
+    border-radius: 6px;
+    padding: 5px 0;
+}
+.weather-card-day {
+    border: 1px solid #45475a;
+    border-radius: 8px;
+    background-color:  rgba(17, 17, 27, 0.2);
+}
+.weather-card-day .label {
+    font-size: 12px;
+}
 .taskbar-widget{
     padding: 0;
     margin: 0;
@@ -104,38 +136,6 @@
     padding:0 6px;
     border: none;
     margin: 0;
-}
-
-.update-check-widget {
-    padding: 0 0px 0 0px;
-}
-.update-check-widget .icon {
-    font-size: 14px;
-}
-.update-check-widget .widget-container.winget,
-.update-check-widget .widget-container.windows {
-    background: var(--maroon);
-    margin: 7px 2px 7px 2px;
-    border-radius: 9px;
-    border: 2px solid var(--red);
-}
-.update-check-widget .widget-container.windows {
-    background: var(--lavender);
-    margin: 7px 2px 7px 2px;
-    border-radius: 9px;
-    border: 2px solid var(--blue);
-}
-.update-check-widget .widget-container.winget .icon,
-.update-check-widget .widget-container.windows .icon {
-    color: var(--base);
-    margin: 0 1px 0 6px;
-}
-.update-check-widget .widget-container.winget .label,
-.update-check-widget .widget-container.windows .label {
-    margin: 0 6px 0 1px;
-    color: var(--base);
-    font-weight: 900;
-    font-size: 14px;
 }
 .memory-widget .icon {
     font-size: 14px;

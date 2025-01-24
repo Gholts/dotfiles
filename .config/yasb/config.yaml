@@ -1,7 +1,7 @@
 watch_stylesheet: true
 watch_config: true
 debug: false
-hide_taskbar: true
+hide_taskbar: false
 
 bars:
   primary-bar:
@@ -30,8 +30,8 @@ bars:
       right: 0
     widgets:
       left: ["active_window"]
-      center: ["clock","apps"]
-      right: ["update","github","taskbar","weather","memory","volume","win_button"]
+      center: ["apps"]
+      right: ["taskbar","weather","memory","volume","clock"]
   secondly-bar:
     enabled: true
     screens: ["DISPLAY2"]
@@ -57,23 +57,10 @@ bars:
       bottom: 3
       right: 2
     widgets:
-      left: ["active_window"]
-      center: ["traffic"]
-      right: ["taskbar","weather","memory","volume","win_button"]
+      left: ["win_button","memory","traffic"]
+      center: ["lang"]
+      right: ["volume","clock"]
 widgets:
-  update:
-    type: "yasb.update_check.UpdateCheckWidget"
-    options:
-      winget_update:
-        enabled: true
-        label: "<span>\uf0ab</span>{count}"
-        interval: 30
-        exclude: []
-      windows_update:
-        enabled: false
-        label: "<span>\uf0ab</span>{count}"
-        interval: 240
-        exclude: []
   active_window:
     type: "yasb.active_window.ActiveWindowWidget"
     options:
@@ -82,7 +69,7 @@ widgets:
       label_no_window: ""
       label_icon: true
       label_icon_size: 14
-      max_length: 75
+      max_length: 60
       max_length_ellipsis: "..."
       monitor_exclusive: false
   clock:
@@ -94,14 +81,17 @@ widgets:
   weather:
     type: "yasb.weather.WeatherWidget"
     options:
-      label: "<span>{icon}</span> {temp_c}"
-      label_alt: "{location}: Min {min_temp_c}, Max {max_temp_c}, Humidity {humidity}"
-      api_key: "24b6c2cda6d84066b0304531241908"
+      label: "<span>{icon}</span> {temp}"
+      label_alt: "{location}: Min {min_temp}, Max {max_temp}, Humidity {humidity}"
+      api_key: "3bf4cf9a7c3f40d6b31174128242807"
+      show_alerts: true
       update_interval: 600
       hide_decimal: true
+      units: "metric"
       location: "Hohhot"
       callbacks:
-        on_left: "toggle_label"
+        on_left: "toggle_card"
+        on_right: "toggle_label"
       icons:
         sunnyDay: "\udb81\udd99"
         clearNight: "\udb81\udd99"
@@ -113,6 +103,15 @@ widgets:
         snowyIcyNight: "\udb81\udd99"
         blizzard: "\udb81\udd99"
         default: "\udb81\udd99"
+      weather_card: 
+        blur: True
+        round_corners: True
+        round_corners_type: "normal"
+        border_color: "System"
+        alignment: "right"
+        direction: "down"
+        distance: 6
+        icon_size: 64
   volume:
     type: "yasb.volume.VolumeWidget"
     options:
@@ -136,14 +135,13 @@ widgets:
         right: 8
       label: "{data}"
       app_list:
-        - { icon: "\uf0a2", launch: "notification_center" }
-        - { icon: "\uf422", launch: "search" }
-        - { icon: "\ueb03", launch: "cmd /c Taskmgr" }
-        - { icon: "\uf489", launch: "wt" }
+        - { icon: "\uf4b5", launch: "wt" }
+        - { icon: "\uf07c", launch: "explorer" }
+        - { icon: "\ue696", launch: "D:\\Sublime Text\\sublime_text.exe" }
         - { icon: "\uf1ff",launch: "C:\\Users\\GhostMxv\\AppData\\Local\\Discord\\Update.exe --processStart Discord.exe" }
-        - { icon: "\ue217",launch: "D:\\64Gram Desktop\\Telegram.exe" }
+        - { icon: "\ue217",launch: "D:\\AyuGram\\AyuGram.exe" }
         - { icon: "\uf1d7",launch: "D:\\WeChat\\Weixin\\Weixin.exe" }
-        - { icon: "\uf268",launch: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" }
+        - { icon: "\uf268",launch: "C:\\Users\\GhostMxv\\AppData\\Local\\Thorium\\Application\\thorium.exe" }
         - { icon: "\uf1bc",launch: "C:\\Users\\GhostMxv\\AppData\\Roaming\\Spotify\\Spotify.exe" }
   github:
     type: "yasb.github.GithubWidget"
@@ -197,3 +195,14 @@ widgets:
         class_name: "system-widget"
         callbacks:
           on_left: "exec start_menu"
+  lang:
+      type: "yasb.custom.CustomWidget"
+      options:
+        label: "<span>\uf1ab</span>{data}"
+        label_alt: "{data}"
+        class_name: "lang-widget"
+        exec_options:
+          run_cmd: "powershell Add-Type -AssemblyName System.Windows.Forms;([System.Windows.Forms.InputLanguage]::CurrentInputLanguage).Culture.Name"
+          # run every 10 sec
+          run_interval: 500
+          return_format: "string"
