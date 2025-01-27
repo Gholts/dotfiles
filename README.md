@@ -22,3 +22,4 @@ Windows11 Pro 22H2(22621.2134)
     - [Google translate dark mode](https://userstyles.world/style/1036/google-translate-dark-theme) and [the latest Fix version](DarkMain.user.css)
   - Windows Terminal - [Dracula schemes](https://draculatheme.com/powershell)
   - Sublime - [Dracula schemes](https://draculatheme.com/sublime)
+  

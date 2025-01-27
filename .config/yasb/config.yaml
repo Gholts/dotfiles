@@ -88,7 +88,7 @@ widgets:
       update_interval: 600
       hide_decimal: true
       units: "metric"
-      location: "Hohhot"
+      location: ""
       callbacks:
         on_left: "toggle_card"
         on_right: "toggle_label"
