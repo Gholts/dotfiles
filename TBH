@@ -1,0 +1,14 @@
+{
+  "backgroundStyle": "acrylicBlur",
+  "color.red": 0,
+  "color.green": 0,
+  "color.blue": 0,
+  "color.transparency": 128,
+  "onlyWhenMaximized": 0,
+  "styleForDarkMode.use": 0,
+  "styleForDarkMode.backgroundStyle": "acrylicBlur",
+  "styleForDarkMode.color.red": 255,
+  "styleForDarkMode.color.green": 127,
+  "styleForDarkMode.color.blue": 39,
+  "styleForDarkMode.color.transparency": 128
+}

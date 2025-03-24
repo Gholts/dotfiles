@@ -1,25 +1,27 @@
-# dotfiles system
+## Windhawk
 
-Windows11 Pro 22H2(22621.2134)
+### System
+Bring Back the Borders!
 
-<td align="center"><img src="preview/flow launcher.png?raw=true" width="500"></td>
+Dark Mode for Notepad
 
-<td align="center"><img src="preview/desktop.png?raw=true" width="500"></td>
+Disable grouping on the taskbar
 
-## dependencies
-  - Starship (shell require nerd font)
-  - Yasb reborn
-  - Fastfetch
-  - Onefetch
-  - PowerShell 7.4+ (not found command via powertoyz)
-  - Microsoft.WinGet.Client (not found command via powertoyz)
+Dark mode context menus | When do you want context menus in dark mode?: Always
 
-## recommended
-  - Flow launcher
-    - [onsetGlaze theme](https://github.com/abhidahal/onsetGlaze.flow)
-  - Stylus
-    - [Catppuccin Userstyles](https://catppuccin-userstyles-customizer.uncenter.dev/) - Mocha & Lavender
-    - [Google translate dark mode](https://userstyles.world/style/1036/google-translate-dark-theme) and [the latest Fix version](DarkMain.user.css)
-  - Windows Terminal - [Dracula schemes](https://draculatheme.com/powershell)
-  - Sublime - [Dracula schemes](https://draculatheme.com/sublime)
-  
+Taskbar height and icon size | Icon size:20 / Taskbar height:38 / Taskbar button width:36
+
+Taskbar tray system icon tweaks | [My Config](TTSIT)
+
+Taskbar on top for Windows 11 | [My Config](TOTW)
+
+Windows 11 Taskbar Styler | [My Config](TBH)
+
+Taskbar Background Helpers(I have two monitors) | [My Config](TBH)
+
+Windows 11 Explorer Styler | [Mod creators install guide on Windhawk Discord server](https://discord.com/channels/923944342991818753/1317578806143484084/1317578806143484084) | [Windhawk mod code](https://github.com/m417z/my-windhawk-mods/blob/main/mods/windows-11-file-explorer-styler.wh.cpp) | [My Config](Explorer)
+
+Better file sizes in Explorer details | [My Config](BFSED)
+
+### Spotify
+CEF/Spotify Tweaks | [My Config](CEF)

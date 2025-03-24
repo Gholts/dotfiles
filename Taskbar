@@ -1,0 +1,9 @@
+{
+  "theme": "",
+  "controlStyles[0].target": "Rectangle#BackgroundStroke",
+  "controlStyles[0].styles[0]": "Visibility=Collapsed",
+  "resourceVariables[0].variableKey": "",
+  "resourceVariables[0].value": "",
+  "controlStyles[1].target": "Rectangle#BackgroundFill",
+  "controlStyles[1].styles[0]": "Fill:=<AcrylicBrush TintColor=\"Black\" TintOpacity=\"0.8\" />"
+}
