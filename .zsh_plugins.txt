@@ -1,0 +1,14 @@
+jeffreytse/zsh-vi-mode
+
+hlissner/zsh-autopair kind:defer
+
+Aloxaf/fzf-tab
+mattmc3/ez-compinit
+zsh-users/zsh-completions kind:fpath path:src
+
+olets/zsh-abbr
+zsh-users/zsh-autosuggestions
+olets/zsh-autosuggestions-abbreviations-strategy
+
+zdharma-continuum/fast-syntax-highlighting
+5A6F65/fast-abbr-highlighting kind:zsh
