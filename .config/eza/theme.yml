@@ -1,0 +1,35 @@
+# https://github.com/eza-community/eza/blob/main/man/eza_colors-explanation.5.md
+filekinds:
+  normal:
+    foreground: "#78a9ff"
+  directory:
+    foreground: "#78a9ff"
+  symlink:
+    foreground: "#3ddbd9"
+  executable:
+    foreground: "#42be65"
+perms:
+  user_read:
+    foreground: "#be95ff"
+    is_bold: true
+  user_write:
+    foreground: "#ee5396"
+    is_bold: true
+  user_execute_file:
+    foreground: "#42be65"
+    is_bold: true
+  user_execute_other:
+    foreground: "#42be65"
+    is_bold: true
+  group_read:
+    foreground: "#be95ff"
+  group_write:
+    foreground: "#ee5396"
+  group_execute:
+    foreground: "#42be65"
+  other_read:
+    foreground: "#be95ff"
+  other_write:
+    foreground: "#ee5396"
+  other_execute:
+    foreground: "#42be65"

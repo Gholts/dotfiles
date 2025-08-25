@@ -34,6 +34,6 @@ palette = 12=#42be65
 palette = 13=#be95ff
 palette = 14=#ff7eb6
 palette = 15=#f2f4f8
-font-size = 14
-keybind = global:opt+grave_accent=toggle_quick_terminal
+font-size = 15
+keybind = global:opt+tab=toggle_quick_terminal
 macos-titlebar-style = native

@@ -5,11 +5,22 @@
 -- 't' = Terminal 模式
 -- 'o' = Operator pending 模式
 
+local function smart_close()
+  -- 檢查當前 buffer 的檔案類型 (filetype)
+  if vim.bo.filetype == "NvimTree" then
+    -- 如果是 NvimTree，就執行關閉 NvimTree 的命令
+    vim.cmd.NvimTreeClose()
+  else
+    -- 如果是其他任何 buffer，就執行 bufdelete
+    require("snacks").bufdelete(0)
+  end
+end
+
 -- 快速儲存
 vim.keymap.set('n', '<leader>s', '<cmd>w<cr>', { desc = '[S]ave file', silent = true })
 
 -- 關閉當前 buffer
-vim.keymap.set('n', '<leader>w', '<cmd>bdelete<cr>', { desc = '[W]ipeout current buffer', silent = true })
+vim.keymap.set('n', '<leader>w', smart_close, { desc = '[W]ipeout current buffer', silent = true })
 
 -- 在視窗之間切換
 vim.keymap.set('n', '<leader><Tab>', '<C-w>w', { desc = 'Switch to next window', silent = true })
@@ -17,12 +28,12 @@ vim.keymap.set('n', '<leader><Tab>', '<C-w>w', { desc = 'Switch to next window',
 -- 快速退出
 vim.keymap.set('n', '<leader>qq', '<cmd>q<cr>', { desc = '[Q]uit current window', silent = true })
 
--- Bufferline - 左右切換 Buffer
+-- 左右切換 Buffer
 vim.keymap.set('n', '<S-l>', '<cmd>BufferLineCycleNext<cr>', { desc = 'Next buffer', silent = true })
 
 vim.keymap.set('n', '<S-h>', '<cmd>BufferLineCyclePrev<cr>', { desc = 'Previous buffer', silent = true })
 
--- NvimTree - 開關檔案瀏覽器
+-- NvimTree 開關檔案瀏覽器
 vim.keymap.set('n', '<D-C-c>', '<cmd>NvimTreeToggle<cr>', { desc = 'Toggle [C]ode explorer', silent = true })
 
 -- 使用滑鼠中鍵新增多行游標
