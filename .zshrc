@@ -24,6 +24,9 @@ export PATH="$N_PREFIX/bin:$PATH"
 # Globlely add Repostory path cd execute
 cdpath=("$HOME/Documents/Repostory" $cdpath)
 
+# fzf color scheme
+export FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --color=fg:#d0d0d0,fg+:#d0d0d0,bg:-1,bg+:#262626 --color=hl:#08bdba,hl+:#5fd7ff,info:#78a9ff,marker:#ee5396 --color=prompt:#33b1ff,spinner:#ff7eb6,pointer:#42be65,header:#be95ff --color=border:#262626,label:#aeaeae,query:#d9d9d9 --border='rounded' --border-label='' --preview-window='border-rounded' --prompt='> ' --marker='>' --separator='─' --scrollbar='│'"
+
 # ------------------------------------------------------------------------------
 # §2. 外掛與框架初始化 (Plugins & Frameworks)
 # ------------------------------------------------------------------------------
@@ -41,6 +44,8 @@ source <(fzf --zsh)
 # Antidote
 source $(brew --prefix)/opt/antidote/share/antidote/antidote.zsh
 antidote load
+
+zstyle ':fzf-tab:*' fzf-preview '[[ -d $realpath ]] && { echo "       Directory: \e[1m$(basename "$realpath")\e[0m" && eza -1a --color=always --ignore-glob ".DS_Store|.localized|.idea|.vscode" $realpath } || bat --color=always $realpath'
 
 # ------------------------------------------------------------------------------
 # §3. 自訂函式 (Functions)
