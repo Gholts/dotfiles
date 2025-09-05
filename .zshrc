@@ -1,8 +1,12 @@
+# Starship (better performance)
 if [[ "${widgets[zle-keymap-select]#user:}" == "starship_zle-keymap-select" || \
     "${widgets[zle-keymap-select]#user:}" == "starship_zle-keymap-select-wrapped" ]]; then
 zle -N zle-keymap-select "";
 fi
 eval "$(starship init zsh)"
+
+# oh-my-posh (better zen vibe)
+# eval "$(oh-my-posh init zsh --config ~/.config/ohmyposh/base.toml)"
 
 # Set up fzf key bindings and fuzzy completion
 source <(fzf --zsh)
@@ -17,7 +21,7 @@ export LANG="zh_TW.UTF-8"
 export EDITOR="nvim"
 export VISUAL=$EDITOR
 export HOMEBREW_NO_AUTO_UPDATE=1
-export HOMEBREW_DOWNLOADS_CONCURRENCY=1
+export HOMEBREW_DOWNLOADS_CONCURRENCY=5
 
 export XDG_CONFIG_HOME="$HOME/.config"
 export XDG_DATA_HOME="$HOME/.local/share"
@@ -31,7 +35,6 @@ export TERMINFO="$XDG_DATA_HOME"/terminfo
 export TERMINFO_DIRS="$XDG_DATA_HOME"/terminfo:/usr/share/terminfo
 export NPM_CONFIG_INIT_MODULE="$XDG_CONFIG_HOME"/npm/config/npm-init.js
 export NPM_CONFIG_CACHE="$XDG_CACHE_HOME"/npm
-export NPM_CONFIG_TMP="$XDG_RUNTIME_DIR"/npm
 
 zstyle ':completion:*' cache-path "$XDG_CACHE_HOME"/zsh/zcompcache
 autoload -U compinit && compinit -d "$XDG_CACHE_HOME"/zsh/zcompdump-"$ZSH_VERSION"
@@ -58,7 +61,7 @@ alias "eza"='eza -I=".DS_Store|.localized|.CFUserTextEncoding" --group-directori
 alias "ls"="eza -1"
 alias "la"="eza -lah"
 alias "tr"="eza -T"
-alias "tg"="eza -a --git-ignore"
+alias "tg"="eza -1a --git-ignore"
 alias "ff"="fastfetch"
 alias "status"="git status"
 alias "clone"="git clone"
@@ -104,3 +107,4 @@ zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
 
 bindkey "^p" history-search-backward
 bindkey "^n" history-search-forward
+bindkey '^_' fzf-cd-widget

@@ -1,4 +1,6 @@
 vim.opt.nu = true
+vim.opt.rnu = true
+-- vim.opt.statuscolumn = '%s %{v:relnum}'
 vim.opt.clipboard = 'unnamedplus'
 vim.opt.softtabstop = 2
 vim.opt.expandtab = true
@@ -7,7 +9,6 @@ vim.opt.wrap = false
 vim.opt.termguicolors = true
 vim.opt.tabstop = 4
 vim.opt.shiftwidth = 4
-vim.opt.statuscolumn = '%s %{v:relnum}'
 vim.opt.foldtext = ""
 vim.opt.foldcolumn = "0"
 vim.opt.foldmethod = "expr"

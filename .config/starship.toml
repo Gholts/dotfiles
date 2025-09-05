@@ -1,15 +1,9 @@
 format = """
-$python\
+$battery\
 $username\
 $directory\
 $git_branch\
 $git_status\
-$c\
-$golang\
-$java\
-$nodejs\
-$rust\
-$docker_context\
 $cmd_duration\
 $fill\
 $time\
@@ -49,16 +43,6 @@ truncation_symbol = "…/"
 "Music" = " "
 "Pictures" = " "
 
-[c]
-symbol = " "
-style = "bg:61"
-format = '[ $symbol ($version) ]($style)'
-
-[docker_context]
-symbol = " "
-style = "bg:10"
-format = '[ $symbol $context ]($style)$path'
-
 [git_branch]
 symbol = ""
 style = "bg:60"
@@ -67,30 +51,6 @@ format = '[ $symbol $branch ]($style)'
 [git_status]
 style = "bg:60"
 format = '[$all_status$ahead_behind ]($style)'
-
-[golang]
-symbol = " "
-style = "bg:61"
-format = '[ $symbol ($version) ]($style)'
-
-[java]
-symbol = " "
-style = "bg:61"
-format = '[ $symbol ($version) ]($style)'
-
-[nodejs]
-symbol = ""
-style = "bg:61"
-format = '[ $symbol ($version) ]($style)'
-
-[python]
-style = "bg:60"
-format = '[(\($virtualenv\) )]($style)'
-
-[rust]
-symbol = ""
-style = "bg:61"
-format = '[ $symbol ($version) ]($style)'
 
 [time]
 disabled = false

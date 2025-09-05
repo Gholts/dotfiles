@@ -31,17 +31,14 @@ vim.keymap.set('n', '<leader>qq', '<cmd>q<cr>', { desc = '[Q]uit current window'
 vim.keymap.set('n', '<leader><Tab>', '<C-w>w', { desc = 'Switch to next window', silent = true })
 
 -- 左右切換 Buffer (使用 BufferLine)
-vim.keymap.set('n', '<S-l>', '<cmd>BufferLineCycleNext<cr>', { desc = 'Next buffer', silent = true })
-vim.keymap.set('n', '<S-h>', '<cmd>BufferLineCyclePrev<cr>', { desc = 'Previous buffer', silent = true })
+vim.keymap.set('n', '<C-n>', '<cmd>BufferLineCycleNext<cr>', { desc = 'Next buffer', silent = true })
+vim.keymap.set('n', '<C-p>', '<cmd>BufferLineCyclePrev<cr>', { desc = 'Previous buffer', silent = true })
+
+
+vim.keymap.set('n', '<C-/>', '<cmd>FzfLua files<cr>', { desc = 'FzfLua flie search', silent = true })
 
 -- NvimTree 開關檔案瀏覽器
 vim.keymap.set('n', '<D-C-c>', '<cmd>NvimTreeToggle<cr>', { desc = 'Toggle [C]ode explorer', silent = true })
-
--- Multicursor-nvim: 使用滑鼠中鍵新增多行游標
-vim.keymap.set('n', "<MiddleMouse>", require("multicursor-nvim").handleMouse, { desc = "Multicursor: Add/Remove with middle mouse" })
-vim.keymap.set('n', "<MiddleDrag>", require("multicursor-nvim").handleMouseDrag, { desc = "Multicursor: Drag with middle mouse" })
-vim.keymap.set('n', "<MiddleRelease>", require("multicursor-nvim").handleMouseRelease, { desc = "Multicursor: End middle mouse drag" })
-
 
 -- 在插入模式 (i) 和命令行模式 (c) 下进行映射
 local modes = { 'i', 'c' }
@@ -51,8 +48,9 @@ local opts = {
     silent = true,
 }
 
--- 使用 Cmd + HJKL 进行导航
-vim.keymap.set(modes, '<D-k>', '<Up>', { desc = "Navigate Up", noremap = true, silent = true })
-vim.keymap.set(modes, '<D-j>', '<Down>', { desc = "Navigate Down", noremap = true, silent = true })
-vim.keymap.set(modes, '<D-h>', '<Left>', { desc = "Navigate Left", noremap = true, silent = true })
-vim.keymap.set(modes, '<D-l>', '<Right>', { desc = "Navigate Right", noremap = true, silent = true })
+-- 使用 Control + HJKL 进行导航
+vim.keymap.set(modes, '<C-k>', '<Up>', { desc = "Navigate Up", noremap = true, silent = true })
+vim.keymap.set(modes, '<C-j>', '<Down>', { desc = "Navigate Down", noremap = true, silent = true })
+vim.keymap.set(modes, '<C-h>', '<Left>', { desc = "Navigate Left", noremap = true, silent = true })
+vim.keymap.set(modes, '<C-l>', '<Right>', { desc = "Navigate Right", noremap = true, silent = true })
+

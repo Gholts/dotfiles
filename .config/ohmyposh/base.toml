@@ -1,0 +1,85 @@
+console_title_template = '{{ .Shell }} in {{ .Folder }}'
+version = 3
+final_space = true
+
+[secondary_prompt]
+template = '<b></b> '
+foreground = '5'
+background = 'transparent'
+
+[transient_prompt]
+template = '<b></b> '
+background = 'transparent'
+foreground_templates = ['{{if gt .Code 0}}6{{end}}', '{{if eq .Code 0}}5{{end}}']
+
+[[blocks]]
+type = 'prompt'
+alignment = 'left'
+newline = true
+
+# [[blocks.segments]]
+# type = 'session'
+# style = 'plain'
+# background = '235'
+# template = ' {{ if .SSHSession }} {{ end }}{{ .UserName }} '
+
+[[blocks.segments]]
+type = "battery"
+style = "plain"
+background_templates = [ "{{if eq \"Charging\" .State.String}}233{{end}}", "{{if eq \"Discharging\" .State.String}}235{{end}}", "{{if eq \"Full\" .State.String}}233{{end}}" ]
+template = " {{ if not .Error }}{{ .Percentage }}{{ end }}% "
+
+[[blocks.segments]]
+template = ' {{ .Path }} '
+background = '237'
+type = 'path'
+style = 'plain'
+
+[blocks.segments.properties]
+cache_duration = 'none'
+style = 'full'
+
+[[blocks.segments]]
+template = ' {{ .HEAD }}{{ if or (.Working.Changed) (.Staging.Changed) }}!{{ end }}{{ if gt .Behind 0 }}⇣{{ end }}{{ if gt .Ahead 0 }}⇡ {{ end }}'
+background = '60'
+type = 'git'
+style = 'plain'
+
+[blocks.segments.properties]
+branch_icon = ' '
+cache_duration = 'none'
+commit_icon = '@'
+fetch_status = true
+
+[[blocks.segments]]
+type = "executiontime"
+style = "plain"
+background = "62"
+template = " <b>󰞌 {{ .FormattedMs }}</b> "
+
+[[blocks]]
+type = 'prompt'
+alignment = 'right'
+
+[[blocks.segments]]
+background = '62'
+type = 'time'
+style = 'plain'
+
+[blocks.segments.properties]
+time_format = "15:04"
+
+[[blocks]]
+type = 'prompt'
+alignment = 'left'
+newline = true
+
+[[blocks.segments]]
+template = '<b></b>'
+background = 'transparent'
+type = 'text'
+style = 'plain'
+foreground_templates = ['{{if gt .Code 0}}6{{end}}', '{{if eq .Code 0}}5{{end}}']
+
+[blocks.segments.properties]
+cache_duration = 'none'
