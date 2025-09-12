@@ -1,12 +1,9 @@
-# Starship (better performance)
+# Starship
 if [[ "${widgets[zle-keymap-select]#user:}" == "starship_zle-keymap-select" || \
     "${widgets[zle-keymap-select]#user:}" == "starship_zle-keymap-select-wrapped" ]]; then
 zle -N zle-keymap-select "";
 fi
 eval "$(starship init zsh)"
-
-# oh-my-posh (better zen vibe)
-# eval "$(oh-my-posh init zsh --config ~/.config/ohmyposh/base.toml)"
 
 # Set up fzf key bindings and fuzzy completion
 source <(fzf --zsh)
