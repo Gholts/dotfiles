@@ -1,3 +1,16 @@
+
+export LANG="zh_TW.UTF-8"
+export EDITOR="nvim"
+export VISUAL=$EDITOR
+export HOMEBREW_NO_AUTO_UPDATE=1
+export HOMEBREW_DOWNLOADS_CONCURRENCY=5
+
+export XDG_CONFIG_HOME="$HOME/.config"
+export XDG_DATA_HOME="$HOME/.local/share"
+export XDG_STATE_HOME="$HOME/.local/state"
+export XDG_CACHE_HOME="$HOME/.cache"
+export XDG_RUNTIME_DIR="$HOME/.cache"
+
 # Starship (better performance)
 if [[ "${widgets[zle-keymap-select]#user:}" == "starship_zle-keymap-select" || \
     "${widgets[zle-keymap-select]#user:}" == "starship_zle-keymap-select-wrapped" ]]; then
@@ -16,18 +29,6 @@ source $(brew --prefix)/opt/antidote/share/antidote/antidote.zsh
 antidote load
 
 ############################################
-
-export LANG="zh_TW.UTF-8"
-export EDITOR="nvim"
-export VISUAL=$EDITOR
-export HOMEBREW_NO_AUTO_UPDATE=1
-export HOMEBREW_DOWNLOADS_CONCURRENCY=5
-
-export XDG_CONFIG_HOME="$HOME/.config"
-export XDG_DATA_HOME="$HOME/.local/share"
-export XDG_STATE_HOME="$HOME/.local/state"
-export XDG_CACHE_HOME="$HOME/.cache"
-export XDG_RUNTIME_DIR="$HOME/.cache"
 
 export ANDROID_USER_HOME="$XDG_DATA_HOME"/android
 export LESSHISTFILE="${XDG_STATE_HOME}"/lesshst
@@ -63,14 +64,9 @@ alias "la"="eza -lah"
 alias "tr"="eza -T"
 alias "tg"="eza -1a --git-ignore"
 alias "ff"="fastfetch"
-alias "status"="git status"
-alias "clone"="git clone"
-alias "push"="git push"
-alias "add"="git add"
-alias "commit"="git commit -m"
 alias "gca"="git add . && git commit -m"
 alias "rime-install"="~/plum/rime-install"
-alias "tailscale"="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
+alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
 
 ############################################
 
@@ -108,3 +104,5 @@ zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
 bindkey "^p" history-search-backward
 bindkey "^n" history-search-forward
 bindkey '^_' fzf-cd-widget
+
+ff
