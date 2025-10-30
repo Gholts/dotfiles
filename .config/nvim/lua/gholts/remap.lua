@@ -1,56 +1,58 @@
--- 'n' = Normal 模式
--- 'i' = Insert 模式
--- 'v' = Visual 模式
--- 'x' = Visual Block 模式
--- 't' = Terminal 模式
--- 'o' = Operator pending 模式
+local bind = vim.keymap.set
+local ic = { "i", "c" }
 
--- 快速儲存
-vim.keymap.set('n', '<leader>s', '<cmd>w<cr>', { desc = '[S]ave file', silent = true })
+-- Save
+bind("n", "<leader>s", "<cmd>w<cr>", { desc = "[S]ave file", noremap = true, silent = true })
 
--- 智慧關閉當前 buffer 的函數
+-- Quit
+bind("n", "<leader>qq", "<cmd>q<cr>", { desc = "[Q]uit current window", noremap = true, silent = true })
+
+-- Force Quit
+bind("n", "<Bslash>q", ":q!<CR>", { desc = "Force Quit", noremap = true, silent = true })
+
+-- Smart Close Buffer
 local function smart_close()
-    -- 檢查當前 buffer 的檔案類型 (filetype)
-    if vim.bo.filetype == "NvimTree" then
-        -- 如果是 NvimTree，就執行關閉 NvimTree 的命令
-        vim.cmd.NvimTreeClose()
-    else
-        -- 如果是其他任何 buffer，就執行 bufdelete
-        -- 將 require 放在函數內部，因為它只在這裡被使用
-        require("snacks").bufdelete(0)
-    end
+	if vim.bo.filetype == "NvimTree" then
+		vim.cmd.NvimTreeClose()
+	else
+		require("snacks").bufdelete(0)
+	end
 end
 
--- 關閉當前 buffer
-vim.keymap.set('n', '<leader>w', smart_close, { desc = '[W]ipeout current buffer', silent = true })
+-- Close Current Buffer
+bind("n", "<leader>w", smart_close, { desc = "[W]ipeout current buffer", noremap = true, silent = true })
 
--- 快速退出
-vim.keymap.set('n', '<leader>qq', '<cmd>q<cr>', { desc = '[Q]uit current window', silent = true })
+-- Switch to Next Window
+bind("n", "<leader><Tab>", "<C-w>w", { desc = "Switch to next window", noremap = true, silent = true })
 
--- 在視窗之間切換
-vim.keymap.set('n', '<leader><Tab>', '<C-w>w', { desc = 'Switch to next window', silent = true })
+-- Cycle Switch Buffer by Buffer Line
+bind("n", "<C-p>", "<cmd>BufferLineCycleNext<cr>", { desc = "Next buffer", noremap = true, silent = true })
+bind("n", "<C-n>", "<cmd>BufferLineCyclePrev<cr>", { desc = "Previous buffer", noremap = true, silent = true })
 
--- 左右切換 Buffer (使用 BufferLine)
-vim.keymap.set('n', '<C-n>', '<cmd>BufferLineCycleNext<cr>', { desc = 'Next buffer', silent = true })
-vim.keymap.set('n', '<C-p>', '<cmd>BufferLineCyclePrev<cr>', { desc = 'Previous buffer', silent = true })
+-- Fuzzy File Search
+bind("n", "<C-/>", "<cmd>FzfLua files<cr>", { desc = "FzfLua flie search", noremap = true, silent = true })
 
+-- Toggle NvimTree
+bind("n", "<D-C-c>", "<cmd>NvimTreeToggle<cr>", { desc = "Toggle [C]ode explorer", noremap = true, silent = true })
 
-vim.keymap.set('n', '<C-/>', '<cmd>FzfLua files<cr>', { desc = 'FzfLua flie search', silent = true })
+-- Temporary Move
+bind(ic, "<C-k>", "<Up>", { desc = "Navigate Up", noremap = true, silent = true })
+bind(ic, "<C-j>", "<Down>", { desc = "Navigate Down", noremap = true, silent = true })
+bind(ic, "<C-h>", "<Left>", { desc = "Navigate Left", noremap = true, silent = true })
+bind(ic, "<C-l>", "<Right>", { desc = "Navigate Right", noremap = true, silent = true })
 
--- NvimTree 開關檔案瀏覽器
-vim.keymap.set('n', '<D-C-c>', '<cmd>NvimTreeToggle<cr>', { desc = 'Toggle [C]ode explorer', silent = true })
+-- Paste No Copy
+bind("v", "p", '"_dP', { noremap = true, silent = true })
 
--- 在插入模式 (i) 和命令行模式 (c) 下进行映射
-local modes = { 'i', 'c' }
--- 选项
-local opts = {
-    noremap = true,
-    silent = true,
-}
+-- Boolean Switch
+bind("n", "<leader>t", function()
+	local word = vim.fn.expand("<cword>") -- get current word under cursor
+	if word == "true" then
+		vim.api.nvim_command("normal! ciwfalse") -- make it false
+	elseif word == "false" then
+		vim.api.nvim_command("normal! ciwtrue") -- make it true
+	end
+end, { desc = "Toggle true/false", silent = true })
 
--- 使用 Control + HJKL 进行导航
-vim.keymap.set(modes, '<C-k>', '<Up>', { desc = "Navigate Up", noremap = true, silent = true })
-vim.keymap.set(modes, '<C-j>', '<Down>', { desc = "Navigate Down", noremap = true, silent = true })
-vim.keymap.set(modes, '<C-h>', '<Left>', { desc = "Navigate Left", noremap = true, silent = true })
-vim.keymap.set(modes, '<C-l>', '<Right>', { desc = "Navigate Right", noremap = true, silent = true })
-
+-- Fully Indent
+bind("n", "<C-=>", "ggVG=", { desc = "Select all and indent", noremap = true, silent = true })

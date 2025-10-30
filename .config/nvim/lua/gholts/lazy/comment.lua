@@ -1,46 +1,44 @@
 return {
-    'numToStr/Comment.nvim',
-    opts = {
-        ---Add a space b/w comment and the line
-        padding = true,
-        ---Whether the cursor should stay at its position
-        sticky = true,
-        ---Lines to be ignored while (un)comment
-        ignore = nil,
-        ---LHS of toggle mappings in NORMAL mode
-        toggler = {
-            ---Line-comment toggle keymap
-            line = 'gcc',
-            ---Block-comment toggle keymap
-            block = 'gbc',
-        },
-        ---LHS of operator-pending mappings in NORMAL and VISUAL mode
-        opleader = {
-            ---Line-comment keymap
-            line = 'gc',
-            ---Block-comment keymap
-            block = 'gb',
-        },
-        ---LHS of extra mappings
-        extra = {
-            ---Add comment on the line above
-            above = 'gcO',
-            ---Add comment on the line below
-            below = 'gco',
-            ---Add comment at the end of line
-            eol = 'gcA',
-        },
-        ---Enable keybindings
-        ---NOTE: If given `false` then the plugin won't create any mappings
-        mappings = {
-            ---Operator-pending mapping; `gcc` `gbc` `gc[count]{motion}` `gb[count]{motion}`
-            basic = true,
-            ---Extra mapping; `gco`, `gcO`, `gcA`
-            extra = true,
-        },
-        ---Function to call before (un)comment
-        pre_hook = nil,
-        ---Function to call after (un)comment
-        post_hook = nil,
-    }
+	"numToStr/Comment.nvim",
+	event = "VeryLazy",
+	dependencies = {
+		"JoosepAlviste/nvim-ts-context-commentstring",
+	},
+	config = function()
+		local keys_to_unmap = {
+			n = { "gc", "gcc" },
+			x = { "gc" },
+			o = { "gc" },
+		}
+		for mode, keys in pairs(keys_to_unmap) do
+			for _, key in ipairs(keys) do
+				pcall(vim.keymap.del, mode, key)
+			end
+		end
+
+		require("Comment").setup({
+			padding = true,
+			sticky = true,
+			ignore = "^$",
+			toggler = {
+				line = "gcc",
+				block = "gbc",
+			},
+			opleader = {
+				line = "gc",
+				block = "gb",
+			},
+			extra = {
+				above = "gcO",
+				below = "gco",
+				eol = "gcA",
+			},
+			mappings = {
+				basic = true,
+				extra = false,
+			},
+			pre_hook = require("ts_context_commentstring.integrations.comment_nvim").create_pre_hook(),
+			post_hook = nil,
+		})
+	end,
 }
