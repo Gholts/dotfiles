@@ -2,9 +2,9 @@
 
 This repository contains my personal configuration files for Daily-Driving on macOS.
 
-It's not recommended to directly copy my configs, unless you know what they mean. Google and the manual pages are your best friends when exploring the open source world.
+It's not recommended to directly copy my configs, unless you know what they mean.
 
-If you want, check out my [blog](https://gholts.top/).
+Check out my [blog](https://gholts.top/).
 
 ## Neovim
 
