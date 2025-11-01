@@ -74,10 +74,13 @@ return {
 		},
 		{
 			"MeanderingProgrammer/render-markdown.nvim",
-			opts = {
-				file_types = { "markdown", "Avante" },
-			},
 			ft = { "markdown", "Avante" },
+			config = function()
+				require("render-markdown").setup({
+					file_types = { "markdown", "Avante" },
+					completions = { lsp = { enabled = true } },
+				})
+			end,
 		},
 	},
 }
