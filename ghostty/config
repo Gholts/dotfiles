@@ -1,30 +1,46 @@
-# vim: filetype=conf
+#------------------------------------------------------------------
+#     █████████  █████               ████   █████
+#    ███░░░░░███░░███               ░░███  ░░███
+#   ███     ░░░  ░███████    ██████  ░███  ███████    █████
+#  ░███          ░███░░███  ███░░███ ░███ ░░░███░    ███░░
+#  ░███    █████ ░███ ░███ ░███ ░███ ░███   ░███    ░░█████
+#  ░░███  ░░███  ░███ ░███ ░███ ░███ ░███   ░███ ███ ░░░░███
+#   ░░█████████  ████ █████░░██████  █████  ░░█████  ██████
+#    ░░░░░░░░░  ░░░░ ░░░░░  ░░░░░░  ░░░░░    ░░░░░  ░░░░░░
+#------------------------------------------------------------------
+#-- Windows
+#------------------------------------------------------------------
 fullscreen = true
-quick-terminal-position = bottom
-quick-terminal-screen = macos-menu-bar
-quick-terminal-size = 30%
-clipboard-read = allow
-clipboard-trim-trailing-spaces = true
-clipboard-paste-protection = true
+macos-titlebar-style = native
+window-padding-balance = true
 window-subtitle = working-directory
 window-colorspace = display-p3
-window-padding-balance = true
-background-opacity = 0.80
-background-blur = 76
-bell-features = no-attention
 window-height = 30
 window-width = 130
 window-step-resize = true
-theme = Oxocarbon
+background-opacity = 0.80
+background-blur = 76
+#----------------------------------------------------quick_terminal
+quick-terminal-position = bottom
+quick-terminal-screen = macos-menu-bar
+quick-terminal-size = 30%
+#------------------------------------------------------------------
+#-- Appearance
+#--------------------------------------------------------------font
+font-size = 15
+#--------------------------------------------------------background
 background = #161616
 foreground = #f2f4f8
 selection-background = #393939
 selection-foreground = #161616
-shell-integration-features = ssh-terminfo, title, ssh-env
-cursor-color = #ffffff
+#------------------------------------------------------------cursor
 cursor-text = #000000
-cursor-style-blink = true
+cursor-color = #ffffff
 cursor-style = underline
+cursor-style-blink = true
+#------------------------------------------------------color_scheme
+theme = Oxocarbon
+#------------------------------------------------------------------
 palette = 0=#161616
 palette = 1=#33b1ff
 palette = 2=#33b1ff
@@ -41,6 +57,17 @@ palette = 12=#42be65
 palette = 13=#be95ff
 palette = 14=#ff7eb6
 palette = 15=#f2f4f8
-font-size = 15
+#------------------------------------------------------------------
+#-- Function
+#---------------------------------------------------------clipboard
+clipboard-read = allow
+clipboard-write = allow
+clipboard-trim-trailing-spaces = true
+clipboard-paste-protection = true
+#------------------------------------------------------------------
+bell-features = no-attention
+shell-integration-features = ssh-terminfo, title, ssh-env
+#------------------------------------------------------------------
+#-- Keybind
+#------------------------------------------------------------------
 keybind = global:opt+tab=toggle_quick_terminal
-macos-titlebar-style = native

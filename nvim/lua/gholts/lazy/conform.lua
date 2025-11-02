@@ -6,6 +6,8 @@ return {
 		formatters_by_ft = {
 			lua = { "stylua" },
 			markdown = { "prettierd" },
+			css = { "prettierd" },
+			html = { "prettierd" },
 		},
 		-- Set default options
 		default_format_ops = {

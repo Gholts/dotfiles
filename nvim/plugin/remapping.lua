@@ -1,5 +1,6 @@
 -------------------------------------------------------no-whichkey
 local bind = vim.keymap.set
+local bo, cmd, fn, api
 local ic = { "i", "c" }
 local mapOption = { noremap = true, silent = true }
 ------------------------------------------------------------------
