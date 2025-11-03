@@ -1,6 +1,6 @@
 -------------------------------------------------------no-whichkey
 local bind = vim.keymap.set
-local bo, cmd, fn, api
+local bo, cmd, fn, api = vim.bo, vim.cmd, vim.fn, vim.api
 local ic = { "i", "c" }
 local mapOption = { noremap = true, silent = true }
 ------------------------------------------------------------------
@@ -38,8 +38,8 @@ bind("n", "9", "<cmd>BufferLineGoToBuffer 9<cr>", mapOption)
 -- Close Current Buffer
 bind("n", "<leader>w", function()
 	local function smart_close()
-		if vim.bo.filetype == "NvimTree" then
-			vim.cmd.NvimTreeClose()
+		if bo.filetype == "NvimTree" then
+			cmd.NvimTreeClose()
 		else
 			require("snacks").bufdelete(0)
 		end
@@ -63,11 +63,11 @@ bind(ic, "<C-l>", "<Right>", mapOption)
 -- Boolean Switch
 ------------------------------------------------------------------
 bind("n", "<leader>t", function()
-	local word = vim.fn.expand("<cword>") -- get current word under cursor
+	local word = fn.expand("<cword>") -- get current word under cursor
 	if word == "true" then
-		vim.api.nvim_command("normal! ciwfalse") -- make it false
+		api.nvim_command("normal! ciwfalse") -- make it false
 	elseif word == "false" then
-		vim.api.nvim_command("normal! ciwtrue") -- make it true
+		api.nvim_command("normal! ciwtrue") -- make it true
 	end
 end, mapOption)
 ------------------------------------------------------------------
@@ -75,10 +75,10 @@ end, mapOption)
 ------------------------------------------------------------------
 bind("n", "<C-=>", function()
 	local function indent_restore_cursor()
-		local original_view = vim.fn.winsaveview()
-		vim.cmd("normal! ggVG=") -- built-in indent
+		local original_view = fn.winsaveview()
+		cmd("normal! ggVG=") -- built-in indent
 		-- vim.lsp.buf.format({ async = false }) -- lsp format
-		vim.fn.winrestview(original_view)
+		fn.winrestview(original_view)
 	end
 	indent_restore_cursor()
 end, mapOption)
