@@ -71,3 +71,10 @@ shell-integration-features = ssh-terminfo, title, ssh-env
 #-- Keybind
 #------------------------------------------------------------------
 keybind = global:opt+tab=toggle_quick_terminal
+#--------------------------------------------------------goto_split
+keybind = unconsumed:opt+cmd+h=goto_split:left
+keybind = unconsumed:opt+cmd+j=goto_split:bottom
+keybind = unconsumed:opt+cmd+k=goto_split:top
+keybind = unconsumed:opt+cmd+l=goto_split:right
+#------------------------------------------------------------------
+keybind = unconsumed:opt+cmd+Equal=equalize_splits
