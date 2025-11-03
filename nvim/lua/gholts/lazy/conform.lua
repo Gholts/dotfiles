@@ -4,6 +4,9 @@ return {
 	cmd = { "ConformInfo" },
 	opts = {
 		formatters_by_ft = {
+			sh = { "shfmt" },
+			zsh = { "shfmt" },
+			bash = { "shfmt" },
 			lua = { "stylua" },
 			markdown = { "prettierd" },
 			css = { "prettierd" },
