@@ -1,5 +1,9 @@
 return {
 	{
+		"sphamba/smear-cursor.nvim",
+		opts = {},
+	},
+	{
 		"folke/snacks.nvim",
 		priority = 1000,
 		lazy = false,
