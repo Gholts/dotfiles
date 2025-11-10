@@ -6,10 +6,19 @@ It's not recommended to directly copy my configs, unless you know what they mean
 
 Check out my [blog](https://gholts.top/).
 
+## Dependencies
+
+```
+├── eza
+├── bat
+├── ripgrep
+└── tldr
+```
+
 ## Neovim
 
 ```
-./nvim 54e581db9611cd3c0e010acdfe38806acfd54c40
+./nvim
 ├── init.lua
 ├── lazy-lock.json
 ├── lua
@@ -28,10 +37,14 @@ Check out my [blog](https://gholts.top/).
 │           ├── lsp.lua
 │           ├── lualine.lua
 │           ├── misc.lua
+│           │   ├── windwp/nvim-autopairs
+│           │   ├── chaoren/vim-wordmotion
+│           │   ├── kylechui/nvim-surround
+│           │   ├── wansmer/treesj
+│           │   ├── catgoose/nvim-colorizer.lua
+│           │   └── abecodes/tabout.nvim
 │           ├── nvimtree.lua
 │           ├── snacks.lua
-│           ├── ssh.lua
-│           ├── toggleterm.lua
 │           ├── treesitter.lua
 │           ├── trouble.lua
 │           └── undotree.lua
