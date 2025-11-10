@@ -9,7 +9,7 @@
 --    ░░░░░░░░░  ░░░░ ░░░░░  ░░░░░░  ░░░░░    ░░░░░  ░░░░░░
 -----------------------------------------------------------require
 require("gholts.settings")
-require("gholts.custom.cmdline").setup() -- Must be behind the settings required
+require("gholts.custom.cmdline").setup() -- Must be behind the settings required -- Minifier cmdline
 ------------------------------------------------------------------
 -- Global namespace
 ------------------------------------------------------------------
