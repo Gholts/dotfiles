@@ -1,13 +1,5 @@
 #--------------------------------------------- ~/.config/fzf/config
---style=minimal
---preview="
-  if [[ -d {} ]]; then
-    noglob printf \"Directory: \\e[1m%s\\e[0m\\n\" \"\$(basename {})\"
-    eza -1a --group-directories-first --color=always --ignore-glob \".DS_Store|.localized|.idea|.vscode\" {}
-  else
-    bat --color=always --style=numbers,changes,header {}
-  fi
-"
+--preview="~/.config/fzf/preview.sh {}"
 #------------------------------------------------------------------
 --color=fg:#d0d0d0,fg+:#d0d0d0,bg:-1,bg+:#262626
 --color=hl:#08bdba,hl+:#5fd7ff,info:#78a9ff,marker:#ee5396
