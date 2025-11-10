@@ -11,6 +11,8 @@ return {
 			markdown = { "prettierd" },
 			css = { "prettierd" },
 			html = { "prettierd" },
+			yaml = { "prettierd" },
+			toml = { "taplo" },
 		},
 		-- Set default options
 		default_format_ops = {
