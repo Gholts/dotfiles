@@ -8,10 +8,8 @@ local mapOption = { noremap = true, silent = true }
 ------------------------------------------------------------------
 -- Save
 bind("n", "<leader>s", "<cmd>w<cr>", mapOption)
-
 -- Quit
 bind("n", "<leader>qq", "<cmd>q<cr>", mapOption)
-
 -- Force Quit
 bind("n", "<Bslash>q", ":q!<CR>", mapOption)
 ------------------------------------------------------------------
@@ -20,18 +18,16 @@ bind("n", "<Bslash>q", ":q!<CR>", mapOption)
 -- Cycle Switch Buffer by Buffer Line
 bind("n", "<C-p>", "<cmd>BufferLineCycleNext<cr>", mapOption)
 bind("n", "<C-n>", "<cmd>BufferLineCyclePrev<cr>", mapOption)
-
 -- Go to Buffer
-bind("n", "-", "<cmd>BufferLineGoToBuffer -1<cr>", mapOption)
-bind("n", "1", "<cmd>BufferLineGoToBuffer 1<cr>", mapOption)
-bind("n", "2", "<cmd>BufferLineGoToBuffer 2<cr>", mapOption)
-bind("n", "3", "<cmd>BufferLineGoToBuffer 3<cr>", mapOption)
-bind("n", "4", "<cmd>BufferLineGoToBuffer 4<cr>", mapOption)
-bind("n", "5", "<cmd>BufferLineGoToBuffer 5<cr>", mapOption)
-bind("n", "6", "<cmd>BufferLineGoToBuffer 6<cr>", mapOption)
-bind("n", "7", "<cmd>BufferLineGoToBuffer 7<cr>", mapOption)
-bind("n", "8", "<cmd>BufferLineGoToBuffer 8<cr>", mapOption)
-bind("n", "9", "<cmd>BufferLineGoToBuffer 9<cr>", mapOption)
+bind("n", "<localleader>1", "<cmd>BufferLineGoToBuffer 1<cr>", mapOption)
+bind("n", "<localleader>2", "<cmd>BufferLineGoToBuffer 2<cr>", mapOption)
+bind("n", "<localleader>3", "<cmd>BufferLineGoToBuffer 3<cr>", mapOption)
+bind("n", "<localleader>4", "<cmd>BufferLineGoToBuffer 4<cr>", mapOption)
+bind("n", "<localleader>5", "<cmd>BufferLineGoToBuffer 5<cr>", mapOption)
+bind("n", "<localleader>6", "<cmd>BufferLineGoToBuffer 6<cr>", mapOption)
+bind("n", "<localleader>7", "<cmd>BufferLineGoToBuffer 7<cr>", mapOption)
+bind("n", "<localleader>8", "<cmd>BufferLineGoToBuffer 8<cr>", mapOption)
+bind("n", "<localleader>9", "<cmd>BufferLineGoToBuffer 9<cr>", mapOption)
 ------------------------------------------------------------------
 -- Windows
 ------------------------------------------------------------------
@@ -46,10 +42,10 @@ bind("n", "<leader>w", function()
 	end
 	smart_close()
 end, mapOption)
-
+-- Fuzzy File Search fzf-lua
+bind("n", "<C-/>", "<cmd>FzfLua files<cr>", mapOption)
 -- Toggle NvimTree
 bind("n", "<D-C-c>", "<cmd>NvimTreeToggle<cr>", mapOption)
-
 -- Switch to Next Window
 bind("n", "<leader><Tab>", "<C-w>w", mapOption)
 ------------------------------------------------------------------
@@ -59,6 +55,9 @@ bind(ic, "<C-k>", "<Up>", mapOption)
 bind(ic, "<C-j>", "<Down>", mapOption)
 bind(ic, "<C-h>", "<Left>", mapOption)
 bind(ic, "<C-l>", "<Right>", mapOption)
+-- Goto first/last character of the line
+bind({ "n", "v" }, "gl", "$", mapOption)
+bind({ "n", "v" }, "gh", "^", mapOption)
 ------------------------------------------------------------------
 -- Boolean Switch
 ------------------------------------------------------------------
@@ -69,6 +68,17 @@ bind("n", "<leader>t", function()
 	elseif word == "false" then
 		api.nvim_command("normal! ciwtrue") -- make it true
 	end
+end, mapOption)
+------------------------------------------------------------------
+-- Copy Full Text
+------------------------------------------------------------------
+bind("n", "<C-0>", function()
+	local function indent_restore_cursor()
+		local original_view = fn.winsaveview()
+		cmd("normal! ggVGy")
+		fn.winrestview(original_view)
+	end
+	indent_restore_cursor()
 end, mapOption)
 ------------------------------------------------------------------
 -- Format
@@ -82,9 +92,3 @@ bind("n", "<C-=>", function()
 	end
 	indent_restore_cursor()
 end, mapOption)
-
--- Paste No Copy
-bind("v", "p", '"_dP', mapOption)
-
--- Fuzzy File Search
-bind("n", "<C-/>", "<cmd>FzfLua files<cr>", mapOption)
