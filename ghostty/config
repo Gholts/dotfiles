@@ -10,15 +10,17 @@
 #------------------------------------------------------------------
 #-- Windows
 #------------------------------------------------------------------
+# maximize = true
 fullscreen = true
-macos-titlebar-style = native
+macos-window-buttons = hidden
+macos-titlebar-style = transparent
 window-padding-balance = true
 window-subtitle = working-directory
 window-colorspace = display-p3
 window-height = 30
 window-width = 130
 window-step-resize = true
-background-opacity = 0.80
+background-opacity = 1
 background-blur = 76
 #----------------------------------------------------quick_terminal
 quick-terminal-position = bottom
