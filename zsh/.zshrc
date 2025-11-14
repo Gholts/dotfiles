@@ -28,36 +28,6 @@ setopt hist_ignore_space # ignore only space history
 setopt appendhistory     # save history when session ended
 setopt sharehistory      # history across different session
 #------------------------------------------------------------------
-#-- Function
-#--------------------------change_directory_to_current_finder_opend
-# get finder dir
-pfd() {
-    osascript 2>/dev/null <<EOF
-  tell application "Finder"
-    return POSIX path of (target of window 1 as alias)
-end tell
-EOF
-}
-# enter it
-cdf() { cd "$(pfd)"; }
-#------------------------------------------------------------------
-# make dir and enter it immediatelly
-mkd() { mkdir -p "$1" && cd "$1"; }
-# smtart touch
-touch() {
-    for arg in "$@"; do
-        if [[ ! "$arg" == -* ]]; then
-            mkdir -p "$(dirname "$arg")" && command touch "$arg"
-        fi
-    done
-}
-# keybind by `cd -` silently and refresh prompt
-cd-dash() {
-    builtin cd - >/dev/null 2>&1
-    zle reset-prompt
-}
-zle -N cd-dash # registry ZLE widget
-#------------------------------------------------------------------
 #-- Initialization
 #------------------------------------------------------------------
 # starship
@@ -83,12 +53,67 @@ zstyle ':completion:*:descriptions' format "[%d]"
 zstyle ':fzf-tab:*' fzf-flags --height=40% --min-height=15
 zstyle ':fzf-tab:*' fzf-preview '[[ -d $realpath ]] && { echo "Directory: \e[1m$(basename "$realpath")\e[0m" && eza -1aT --level=3 --group-directories-first --color=always --ignore-glob ".DS_Store|.localized|.idea|.vscode" $realpath } || bat --color=always $realpath'
 #------------------------------------------------------------------
+#-- Function
+#--------------------------change_directory_to_current_finder_opend
+# get finder dir
+pfd() {
+    osascript 2>/dev/null <<EOF
+  tell application "Finder"
+    return POSIX path of (target of window 1 as alias)
+end tell
+EOF
+}
+# enter it
+cdf() { cd "$(pfd)"; }
+#------------------------------------------------------------------
+# make dir and enter it immediatelly
+mkd() { mkdir -p "$1" && cd "$1"; }
+# smtart touch
+touch() {
+    for arg in "$@"; do
+        if [[ ! "$arg" == -* ]]; then
+            mkdir -p "$(dirname "$arg")" && command touch "$arg"
+        fi
+    done
+}
+#---------------------------------------------------------------LLM
+opencode() {
+    # doc refs
+    export GOOGLE_VERTEX_PROJECT="vertex-477815"
+    export GOOGLE_VERTEX_REGION="us-central1"
+    # source code refs
+    export GOOGLE_CLOUD_PROJECT="vertex-477815"
+    export GCP_PROJECT="vertex-477815"
+    export GCLOUD_PROJECT="vertex-477815"
+    export GOOGLE_CLOUD_LOCATION="us-central1"
+    export VERTEX_LOCATION="us-central1"
+
+    command opencode "$@"
+}
+#------------------------------------------------------------------
+#-- Widget
+#------------------------------------------------------------------
+# keybind by `cd -` silently and refresh prompt
+cd-dash() {
+    builtin cd - >/dev/null 2>&1
+    zle reset-prompt
+}
+zle -N cd-dash # registry ZLE widget
+# keybind by `^Xc` copy current line to clipboard
+CCLTC() {
+    print -zn $BUFFER | pbcopy
+}
+zle -N CCLTC
+#------------------------------------------------------------------
 #-- Bindkey
 #------------------------------------------------------------------
 bindkey -e
+#-------------------------------------------------------widget_bind
+# bindkey "," cd-dash
+bindkey "^Xc" CCLTC
+#------------------------------------------------------------------
 bindkey "^p" history-search-backward
 bindkey "^n" history-search-forward
-bindkey "," cd-dash
 #------------------------------------------------------------------
 #-- Alias
 #------------------------------------------------------------------
