@@ -1,5 +1,6 @@
 .cache/
 /Users/gholts/.cache/
+.Trash/
 #------------------------------------------------------------------
 node_modules
 bower_components
