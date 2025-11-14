@@ -6,9 +6,15 @@ It's not recommended to directly copy my configs, unless you know what they mean
 
 Check out my [blog](https://gholts.top/).
 
+```shell
+cd dotfiles
+stow -t ~/.config . # it just works
+```
+
 ## Dependencies
 
 ```
+├── stow
 ├── eza
 ├── bat
 ├── ripgrep
@@ -21,11 +27,15 @@ Check out my [blog](https://gholts.top/).
 ./nvim
 ├── init.lua
 ├── lazy-lock.json
+├── ftdetect
+│   └── applescript.vim
 ├── lua
 │   └── gholts
 │       ├── settings.lua
+│       ├── ui.lua
 │       ├── custom
-│       │   └── cmdline.lua
+│       │   ├── cmdline.lua
+│       │   └── diag.lua
 │       └── lazy
 │           ├── avante.lua
 │           ├── bufferline.lua
@@ -43,11 +53,13 @@ Check out my [blog](https://gholts.top/).
 │           │   ├── wansmer/treesj
 │           │   ├── catgoose/nvim-colorizer.lua
 │           │   └── abecodes/tabout.nvim
-│           ├── nvimtree.lua
+│           ├── oil.lua
 │           ├── snacks.lua
 │           ├── treesitter.lua
 │           ├── trouble.lua
 │           └── undotree.lua
-└── plugin
-    └── remapping.lua
+├── plugin
+│   └── remapping.lua
+└── syntax
+    └── applescript.vim
 ```
