@@ -1,4 +1,4 @@
-----------------------~/.config/nvim/lua/gholts/custom/cmdline.lua
+------------------------------------ lua/gholts/custom/cmdline.lua
 local M = {}
 ------------------------------------------------------------------
 function M.setup()
