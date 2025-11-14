@@ -26,8 +26,6 @@ export ANDROID_USER_HOME="$XDG_DATA_HOME"/android
 export LESSHISTFILE="${XDG_STATE_HOME}"/lesshst
 export TERMINFO="$XDG_DATA_HOME"/terminfo
 export TERMINFO_DIRS="$XDG_DATA_HOME"/terminfo:/usr/share/terminfo
-export NPM_CONFIG_INIT_MODULE="$XDG_CONFIG_HOME"/npm/config/npm-init.js
-export NPM_CONFIG_CACHE="$XDG_CACHE_HOME"/npm
 #----------------------------------------------------------packages
 # bun
 export PATH="/Users/gholts/.cache/.bun/bin:$PATH"
@@ -39,8 +37,7 @@ export EDITOR="nvim"
 export VISUAL=$EDITOR
 # homebrew
 export HOMEBREW_NO_AUTO_UPDATE=1
-export HOMEBREW_DOWNLOADS_CONCURRENCY=5
 # fzf
 export FZF_DEFAULT_OPTS_FILE="$HOME/.config/fzf/config"
-export FZF_DEFAULT_COMMAND="fd"
+export FZF_DEFAULT_COMMAND="fd -iIH"
 export FZF_CTRL_T_COMMAND="fd"
