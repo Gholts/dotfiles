@@ -9,7 +9,7 @@
 --    ░░░░░░░░░  ░░░░ ░░░░░  ░░░░░░  ░░░░░    ░░░░░  ░░░░░░
 -----------------------------------------------------------require
 require("gholts.settings")
-require("gholts.custom.cmdline").setup() -- Must be behind the settings required -- Minifier cmdline
+require("gholts.ui")
 ------------------------------------------------------------------
 -- Global namespace
 ------------------------------------------------------------------
@@ -31,7 +31,6 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
 	})
 end
 vim.opt.rtp:prepend(lazypath)
-
 require("lazy").setup({
 	spec = "gholts.lazy",
 	change_detection = { notify = false },
