@@ -1,5 +1,8 @@
 {
-    "global": { "show_in_menu_bar": false },
+    "global": {
+        "enable_notification_window": false,
+        "show_in_menu_bar": false
+    },
     "profiles": [
         {
             "complex_modifications": {
@@ -10,10 +13,22 @@
                             {
                                 "from": {
                                     "key_code": "caps_lock",
-                                    "modifiers": { "optional": ["any"] }
+                                    "modifiers": {
+                                        "optional": [
+                                            "any"
+                                        ]
+                                    }
                                 },
-                                "to": [{ "key_code": "left_control" }],
-                                "to_if_alone": [{ "key_code": "escape" }],
+                                "to": [
+                                    {
+                                        "key_code": "left_control"
+                                    }
+                                ],
+                                "to_if_alone": [
+                                    {
+                                        "key_code": "escape"
+                                    }
+                                ],
                                 "type": "basic"
                             }
                         ]
@@ -41,27 +56,32 @@
             ],
             "fn_function_keys": [
                 {
-                    "from": { "key_code": "f3" },
-                    "to": [{ "apple_vendor_top_case_key_code": "illumination_down" }]
+                    "from": {
+                        "key_code": "f3"
+                    },
+                    "to": [
+                        {
+                            "apple_vendor_top_case_key_code": "illumination_down"
+                        }
+                    ]
                 },
                 {
-                    "from": { "key_code": "f4" },
-                    "to": [{ "apple_vendor_top_case_key_code": "illumination_up" }]
-                },
-                {
-                    "from": { "key_code": "f6" },
-                    "to": [{ "apple_vendor_keyboard_key_code": "spotlight" }]
+                    "from": {
+                        "key_code": "f4"
+                    },
+                    "to": [
+                        {
+                            "apple_vendor_top_case_key_code": "illumination_up"
+                        }
+                    ]
                 }
             ],
             "name": "Default profile",
             "selected": true,
-            "simple_modifications": [
-                {
-                    "from": { "key_code": "escape" },
-                    "to": [{ "apple_vendor_keyboard_key_code": "launchpad" }]
-                }
-            ],
-            "virtual_hid_keyboard": { "keyboard_type_v2": "ansi" }
+            "simple_modifications": [],
+            "virtual_hid_keyboard": {
+                "keyboard_type_v2": "ansi"
+            }
         }
     ]
 }
