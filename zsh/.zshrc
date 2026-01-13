@@ -17,6 +17,7 @@
 HISTSIZE=5000                          # history file size
 SAVEHIST=$HISTSIZE                     # saved history size
 HISTFILE="$XDG_STATE_HOME/zsh/history" # history file dir
+ZLE_RPROMPT_INDENT=0
 #---------------------------------------------------no_dup_historys
 HISTDUP=erase
 setopt hist_ignore_all_dups
@@ -27,15 +28,10 @@ setopt hist_find_no_dups
 setopt hist_ignore_space # ignore only space history
 setopt appendhistory     # save history when session ended
 setopt sharehistory      # history across different session
+setopt correct           # zsh auto correction
 #------------------------------------------------------------------
 #-- Initialization
 #------------------------------------------------------------------
-# starship
-if [[ "${widgets[zle - keymap - select]#user:}" == "starship_zle-keymap-select" ||
-    "${widgets[zle - keymap - select]#user:}" == "starship_zle-keymap-select-wrapped" ]]; then
-    zle -N zle-keymap-select ""
-fi
-eval "$(starship init zsh)"
 # fzf
 source <(fzf --zsh)
 # antidote, zsh plugin manager
@@ -43,6 +39,8 @@ source $(brew --prefix)/opt/antidote/share/antidote/antidote.zsh
 antidote load
 # zsh completion
 autoload -U compinit && compinit -d "$XDG_CACHE_HOME"/zsh/zcompdump-"$ZSH_VERSION"
+# starship
+eval "$(starship init zsh)"
 #------------------------------------------------------------------
 #-- Plugin Configuration
 #------------------------------------------------------------------
@@ -99,18 +97,19 @@ cd-dash() {
     zle reset-prompt
 }
 zle -N cd-dash # registry ZLE widget
+#------------------------------------------------------------------
 # keybind by `^Xc` copy current line to clipboard
-CCLTC() {
-    print -zn $BUFFER | pbcopy
+copy-command() {
+    echo -n "$BUFFER" | pbcopy
 }
-zle -N CCLTC
+zle -N copy-command
 #------------------------------------------------------------------
 #-- Bindkey
 #------------------------------------------------------------------
 bindkey -e
 #-------------------------------------------------------widget_bind
 # bindkey "," cd-dash
-bindkey "^Xc" CCLTC
+bindkey "^Xc" copy-command
 #------------------------------------------------------------------
 bindkey "^p" history-search-backward
 bindkey "^n" history-search-forward
@@ -128,6 +127,7 @@ alias "ls"="eza"
 alias "la"="eza -lah"
 alias "tr"="eza -T --level=4"
 alias "tg"="eza -1a --git-ignore"
+alias "server"="bunx serve"
 #------------------------------------------------------------------
 alias "ff"="fastfetch"
 alias "homebrew"="taproom" # brew is native one, taproom is TUI for homebrew cli
