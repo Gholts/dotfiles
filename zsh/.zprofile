@@ -22,10 +22,17 @@ export XDG_STATE_HOME="$HOME/.local/state"
 export XDG_CACHE_HOME="$HOME/.cache"
 export XDG_RUNTIME_DIR="$HOME/.cache"
 #---------------------------------------------------------xdg-ninja
-export ANDROID_USER_HOME="$XDG_DATA_HOME"/android
-export LESSHISTFILE="${XDG_STATE_HOME}"/lesshst
+export LESSHISTFILE="$XDG_STATE_HOME"/lesshst
 export TERMINFO="$XDG_DATA_HOME"/terminfo
 export TERMINFO_DIRS="$XDG_DATA_HOME"/terminfo:/usr/share/terminfo
+export ANDROID_USER_HOME="$XDG_DATA_HOME"/android
+export CARGO_HOME="$XDG_DATA_HOME"/cargo
+export PYTHON_HISTORY="$XDG_STATE_HOME"/python/python_history
+# ruby
+export BUNDLE_USER_CONFIG="$XDG_CONFIG_HOME"/bundle
+export BUNDLE_USER_CACHE="$XDG_CACHE_HOME"/bundle
+export BUNDLE_USER_PLUGIN="$XDG_DATA_HOME"/bundle
+export RBENV_ROOT="$XDG_DATA_HOME"/rbenv
 #----------------------------------------------------------packages
 # bun
 export PATH="/Users/gholts/.cache/.bun/bin:$PATH"
