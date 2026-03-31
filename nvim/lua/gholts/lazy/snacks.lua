@@ -1,9 +1,5 @@
 return {
 	{
-		"sphamba/smear-cursor.nvim",
-		opts = {},
-	},
-	{
 		"folke/snacks.nvim",
 		priority = 1000,
 		lazy = false,
@@ -30,7 +26,7 @@ return {
 			quickfile = { enabled = false },
 			rename = { enabled = true },
 			scroll = {
-				enabled = false,
+				enabled = true,
 				animate = {
 					duration = { step = 7, total = 150 },
 					easing = "linear",
@@ -46,16 +42,6 @@ return {
 						and vim.bo[buf].buftype ~= "terminal"
 				end,
 			},
-			styles = {
-				snacks_image = {
-					relative = "cursor",
-					border = true,
-					focusable = false,
-					backdrop = true,
-					row = 1,
-					col = 1,
-				},
-			},
 			bigfile = {
 				enabled = true,
 				size = 10 * 1024 * 1024,
@@ -63,7 +49,7 @@ return {
 				line_length = 1000,
 			},
 			image = {
-				enabled = true,
+				enabled = false,
 				backend = "ghostty",
 				doc = {
 					enabled = true,

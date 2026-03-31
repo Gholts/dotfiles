@@ -2,7 +2,7 @@
 local M = {}
 ------------------------------------------------------------------
 function M.setup()
-	local api, opt = vim.api, vim.opt
+	local api, o = vim.api, vim.o
 
 	local cmdline_group = api.nvim_create_augroup("MinimalCmdLine", { clear = true })
 
@@ -10,8 +10,8 @@ function M.setup()
 		group = cmdline_group,
 		pattern = "*",
 		callback = function()
-			opt.laststatus = 2
-			opt.cmdheight = 1
+			o.laststatus = 2
+			o.cmdheight = 1
 		end,
 	})
 
@@ -19,8 +19,8 @@ function M.setup()
 		group = cmdline_group,
 		pattern = "*",
 		callback = function()
-			opt.cmdheight = 0
-			opt.laststatus = 2
+			o.cmdheight = 0
+			o.laststatus = 2
 		end,
 	})
 end

@@ -29,6 +29,16 @@ return {
 			keymaps_help = {
 				border = "single",
 			},
+			view_options = {
+				show_hidden = true,
+				is_hidden_file = function(name)
+					local m = name:match("^%.")
+					return m ~= nil
+				end,
+				is_always_hidden = function(name)
+					return name == ".DS_Store"
+				end,
+			},
 		})
 	end,
 }

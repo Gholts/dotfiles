@@ -17,17 +17,13 @@ return {
 				lualine_b = {
 					{
 						function()
-							return vim.g.remote_neovim_host and ("Remote: %s"):format(vim.uv.os_gethostname()) or ""
+							return vim.g.SSH_CLIENT and ("Remote: %s"):format(vim.uv.os_gethostname()) or ""
 						end,
 						padding = { right = 1, left = 1 },
 					},
 					{
 						"branch",
 						icon = "",
-					},
-					{
-						"diff",
-						symbols = { added = " ", modified = " ", removed = " " },
 					},
 					{
 						"diagnostics",
@@ -73,17 +69,57 @@ return {
 							trouble = { "󰔫", "DevIconGitConfig" },
 							Trouble = { "󰔫", "DevIconGitConfig" },
 						},
+						cond = function()
+							return vim.bo.filetype ~= "oil"
+						end,
+					},
+					{
+						"filename",
+						path = 1,
+						cond = function()
+							return vim.bo.filetype == "oil"
+						end,
 					},
 				},
-				lualine_x = { "encoding", "filetype" },
+				lualine_x = { "filetype" },
 				lualine_y = { "searchcount", "progress" },
 				lualine_z = { "location", "showcmd" },
 			},
 			inactive_sections = {
 				lualine_a = {},
-				lualine_b = {},
-				lualine_c = { "pretty_path" },
-				lualine_x = {},
+				lualine_b = {
+					{
+						function()
+							return vim.g.SSH_CLIENT and ("Remote: %s"):format(vim.uv.os_gethostname()) or ""
+						end,
+						padding = { right = 1, left = 1 },
+					},
+					{
+						"branch",
+						icon = "",
+					},
+					{
+						"diagnostics",
+						sources = { "nvim_diagnostic" },
+						symbols = { error = " ", warn = " ", info = " " },
+					},
+				},
+				lualine_c = {
+					{
+						"pretty_path",
+						cond = function()
+							return vim.bo.filetype ~= "oil"
+						end,
+					},
+					{
+						"filename",
+						path = 1,
+						cond = function()
+							return vim.bo.filetype == "oil"
+						end,
+					},
+				},
+				lualine_x = { "filetype" },
 				lualine_y = {},
 				lualine_z = {},
 			},

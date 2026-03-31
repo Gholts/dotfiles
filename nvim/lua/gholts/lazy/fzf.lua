@@ -2,6 +2,7 @@ return {
 	"ibhagwan/fzf-lua",
 	dependencies = { "nvim-tree/nvim-web-devicons" },
 	config = function()
+		require("fzf-lua").register_ui_select()
 		require("fzf-lua").setup({
 			winopts = {
 				split = "belowright new", -- open in a split instead?
