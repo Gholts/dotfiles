@@ -32,6 +32,7 @@ setopt correct           # zsh auto correction
 #------------------------------------------------------------------
 #-- Initialization
 #------------------------------------------------------------------
+export PATH="/opt/homebrew/opt/node@24/bin:$PATH"
 # fzf
 source <(fzf --zsh)
 # antidote, zsh plugin manager
@@ -73,20 +74,6 @@ touch() {
             mkdir -p "$(dirname "$arg")" && command touch "$arg"
         fi
     done
-}
-#---------------------------------------------------------------LLM
-opencode() {
-    # doc refs
-    export GOOGLE_VERTEX_PROJECT="vertex-477815"
-    export GOOGLE_VERTEX_REGION="us-central1"
-    # source code refs
-    export GOOGLE_CLOUD_PROJECT="vertex-477815"
-    export GCP_PROJECT="vertex-477815"
-    export GCLOUD_PROJECT="vertex-477815"
-    export GOOGLE_CLOUD_LOCATION="us-central1"
-    export VERTEX_LOCATION="us-central1"
-
-    command opencode "$@"
 }
 #------------------------------------------------------------------
 #-- Widget
