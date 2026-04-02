@@ -35,7 +35,7 @@ require("conform").setup({
 				-- followed by decompilation back into plain text. The standard output produced by the
 				-- decompiler inherently conforms to Apple's official stylistic guidelines, automatically
 				-- enforcing correct keyword casing, indentation, and structural spacing.
-				'tmp=$(mktemp /tmp/as_fmt_XXXXXX.scpt); osacompile -o "$tmp" "$1" && osadecompile "$tmp" > "$1"; exit_code=$?; rm -f "$tmp"; exit $exit_code',
+				'tmpdir=$(mktemp -d -t as_fmt); tmp="$tmpdir/fmt.scpt"; osacompile -o "$tmp" "$1" && osadecompile "$tmp" > "$1"; exit_code=$?; rm -rf "$tmpdir"; exit $exit_code',
 				"--",
 				"$FILENAME",
 			},
