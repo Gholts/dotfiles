@@ -8,7 +8,7 @@ Check out my [blog](https://gholts.top/).
 
 ```shell
 cd dotfiles
-stow -t ~/.config . # it just works
+stow -t ~/.config . # just works
 ```
 
 ## Dependencies
@@ -18,48 +18,6 @@ stow -t ~/.config . # it just works
 ├── eza
 ├── bat
 ├── ripgrep
+├── fzf
 └── tldr
-```
-
-## Neovim
-
-```
-./nvim
-├── init.lua
-├── lazy-lock.json
-├── ftdetect
-│   └── applescript.vim
-├── lua
-│   └── gholts
-│       ├── settings.lua
-│       ├── ui.lua
-│       ├── custom
-│       │   ├── cmdline.lua
-│       │   └── diag.lua
-│       └── lazy
-│           ├── avante.lua
-│           ├── bufferline.lua
-│           ├── colorscheme.lua
-│           ├── comment.lua
-│           ├── conform.lua
-│           ├── fzf.lua
-│           ├── gx.lua
-│           ├── lsp.lua
-│           ├── lualine.lua
-│           ├── misc.lua
-│           │   ├── windwp/nvim-autopairs
-│           │   ├── chaoren/vim-wordmotion
-│           │   ├── kylechui/nvim-surround
-│           │   ├── wansmer/treesj
-│           │   ├── catgoose/nvim-colorizer.lua
-│           │   └── abecodes/tabout.nvim
-│           ├── oil.lua
-│           ├── snacks.lua
-│           ├── treesitter.lua
-│           ├── trouble.lua
-│           └── undotree.lua
-├── plugin
-│   └── remapping.lua
-└── syntax
-    └── applescript.vim
 ```
