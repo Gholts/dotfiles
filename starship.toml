@@ -12,6 +12,7 @@
 #------------------------------------------------------------------
 format = """
 [╭](bold fg:8)\
+$battery\
 $username\
 $directory\
 $git_branch\
@@ -20,8 +21,6 @@ $cmd_duration\
 $fill\
 $time\
 $line_break$character"""
-
-right_format = """$battery"""
 #------------------------------------------------------------------
 #-- Option
 #------------------------------------------------------------------
@@ -31,7 +30,7 @@ command_timeout = 5000
 #-- Segment 
 #------------------------------------------------------------------
 [battery]
-format = "[ $symbol$percentage ]($style)"
+format = "[ $percentage ]($style)"
 #------------------------------------------------------------------
 [[battery.display]]
 threshold = 50
