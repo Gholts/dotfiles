@@ -3,6 +3,7 @@ local g, o = vim.g, vim.o
 ------------------------------------------------------------------
 g.mapleader = " " -- remap leader key
 g.maplocalleader = "," -- remap local leader key
+g.netrw_nogx = 1
 ------------------------------------------------------------------
 o.nu = true -- line number
 o.rnu = true -- relative line number
@@ -23,7 +24,7 @@ o.autochdir = false -- automatically change current dir
 o.undofile = true -- persistent undo
 ------------------------------------------------------------------
 -- For smart hidden cmd line default value
-------------------------------------/lua/gholts/custom/cmdline.lua
+-------------------------------------------------------cmdline.lua
 o.cmdheight = 0
 o.laststatus = 2
 ------------------------------------------------------------------

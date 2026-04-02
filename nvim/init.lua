@@ -8,16 +8,19 @@
 --   ░░█████████  ████ █████░░██████  █████  ░░█████  ██████
 --    ░░░░░░░░░  ░░░░ ░░░░░  ░░░░░░  ░░░░░    ░░░░░  ░░░░░░
 -----------------------------------------------------------require
-require("gholts.settings")
-require("gholts.ui")
-------------------------------------------------------------------
--- Global Namespace
-------------------------------------------------------------------
-local namespace = {}
-_G.gl = gl or namespace
-------------------------------------------------------------------
--- Auto Command
------------------------------------------------------------autodir
+vim.loader.enable()
+require("settings")
+require("remapping")
+------------------------------------------------------color_scheme
+vim.pack.add({ "https://github.com/nyoom-engineering/oxocarbon.nvim" })
+vim.opt.background = "dark"
+vim.cmd.colorscheme("oxocarbon")
+local colors = require("oxocarbon").oxocarbon
+if colors then
+	vim.api.nvim_set_hl(0, "FloatBorder", { fg = colors.base03, bg = colors.blend })
+	vim.api.nvim_set_hl(0, "FloatBorder", { fg = colors.base03, bg = "none" })
+end
+----------------------------------------------------------auto_dir
 local function change_cwd_to_arg()
 	vim.schedule(function()
 		local arg = vim.fn.argv(0)
@@ -53,28 +56,34 @@ end
 ------------------------------------------------------------------
 -- Plugins
 ------------------------------------------------------------------
-local data = vim.fn.stdpath("data")
-local lazypath = data .. "/lazy/lazy.nvim"
-if not (vim.uv or vim.loop).fs_stat(lazypath) then
-	vim.fn.system({
-		"git",
-		"clone",
-		"--filter=blob:none",
-		"https://github.com/folke/lazy.nvim.git",
-		"--branch=stable",
-		lazypath,
-	})
-end
-vim.opt.rtp:prepend(lazypath)
-require("lazy").setup({
-	spec = {
-		{ import = "gholts.lazy" },
-	},
-	rocks = {
-		hererocks = true,
-	},
-	change_detection = { notify = false },
-	ui = {
-		border = "single",
-	},
+vim.pack.add({
+	"https://github.com/nvim-lua/plenary.nvim",
+	"https://github.com/nvim-treesitter/nvim-treesitter",
+	"https://github.com/nvim-treesitter/nvim-treesitter-textobjects",
+	"https://github.com/nvim-tree/nvim-web-devicons",
+	"https://github.com/bwpge/lualine-pretty-path",
+	"https://github.com/nvim-lualine/lualine.nvim",
+	"https://github.com/sphamba/smear-cursor.nvim",
+	"https://github.com/serhez/bento.nvim",
+	"https://github.com/stevearc/oil.nvim",
+	"https://github.com/ibhagwan/fzf-lua",
+	"https://github.com/nvim-mini/mini.nvim",
+	"https://github.com/chrishrb/gx.nvim",
+	"https://github.com/folke/trouble.nvim",
+	"https://github.com/mbbill/undotree",
+})
+---------------------------------------------------------------lsp
+vim.pack.add({
+	"https://github.com/stevearc/conform.nvim",
+	"https://github.com/williamboman/mason.nvim",
+	"https://github.com/williamboman/mason-lspconfig.nvim",
+	"https://github.com/hrsh7th/cmp-nvim-lsp",
+	"https://github.com/hrsh7th/cmp-buffer",
+	"https://github.com/hrsh7th/cmp-path",
+	"https://github.com/hrsh7th/cmp-cmdline",
+	"https://github.com/hrsh7th/nvim-cmp",
+	"https://github.com/L3MON4D3/LuaSnip",
+	"https://github.com/saadparwaiz1/cmp_luasnip",
+	"https://github.com/j-hui/fidget.nvim",
+	"https://github.com/neovim/nvim-lspconfig",
 })
