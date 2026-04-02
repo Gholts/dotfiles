@@ -12,8 +12,8 @@
 #------------------------------------------------------------------
 # maximize = true
 fullscreen = true
-macos-window-buttons = hidden
-macos-titlebar-style = transparent
+# macos-window-buttons = hidden
+macos-titlebar-style = native
 window-padding-balance = true
 window-subtitle = working-directory
 window-colorspace = display-p3
@@ -28,6 +28,34 @@ quit-after-last-window-closed = true
 quick-terminal-position = bottom
 quick-terminal-screen = macos-menu-bar
 quick-terminal-size = 30%
+#------------------------------------------------------------------
+#-- Function
+#---------------------------------------------------------clipboard
+clipboard-read = allow
+clipboard-write = allow
+clipboard-trim-trailing-spaces = true
+clipboard-paste-protection = true
+#------------------------------------------------------------------
+bell-features = no-attention
+shell-integration = zsh
+shell-integration-features = no-cursor,sudo,title,ssh-env,ssh-terminfo,path
+cursor-click-to-move = true
+mouse-hide-while-typing = true
+#------------------------------------------------------------------
+window-inherit-working-directory = false
+tab-inherit-working-directory = false
+split-inherit-working-directory = true
+#------------------------------------------------------------------
+#-- Keybind
+#------------------------------------------------------------------
+keybind = global:opt+tab=toggle_quick_terminal
+#--------------------------------------------------------goto_split
+keybind = unconsumed:opt+cmd+h=goto_split:left
+keybind = unconsumed:opt+cmd+j=goto_split:bottom
+keybind = unconsumed:opt+cmd+k=goto_split:top
+keybind = unconsumed:opt+cmd+l=goto_split:right
+#------------------------------------------------------------------
+keybind = unconsumed:opt+cmd+Equal=equalize_splits
 #------------------------------------------------------------------
 #-- Appearance
 #--------------------------------------------------------------font
@@ -61,26 +89,3 @@ palette = 12=#42be65
 palette = 13=#be95ff
 palette = 14=#ff7eb6
 palette = 15=#f2f4f8
-#------------------------------------------------------------------
-#-- Function
-#---------------------------------------------------------clipboard
-clipboard-read = allow
-clipboard-write = allow
-clipboard-trim-trailing-spaces = true
-clipboard-paste-protection = true
-#------------------------------------------------------------------
-bell-features = no-attention
-shell-integration-features = ssh-terminfo, title, ssh-env
-#------------------------------------------------------------------
-window-inherit-working-directory = true
-#------------------------------------------------------------------
-#-- Keybind
-#------------------------------------------------------------------
-keybind = global:opt+tab=toggle_quick_terminal
-#--------------------------------------------------------goto_split
-keybind = unconsumed:opt+cmd+h=goto_split:left
-keybind = unconsumed:opt+cmd+j=goto_split:bottom
-keybind = unconsumed:opt+cmd+k=goto_split:top
-keybind = unconsumed:opt+cmd+l=goto_split:right
-#------------------------------------------------------------------
-keybind = unconsumed:opt+cmd+Equal=equalize_splits
