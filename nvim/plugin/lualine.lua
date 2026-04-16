@@ -4,6 +4,10 @@ require("lualine").setup({
 		component_separators = "",
 		section_separators = "",
 		globalstatus = false,
+		disabled_filetypes = {
+			statusline = { "mason", "undotree" },
+		},
+		ignore_focus = { "fzf" },
 	},
 	sections = {
 		lualine_a = { "mode" },
@@ -42,7 +46,7 @@ require("lualine").setup({
 				directories = {
 					enable = true,
 					shorten = false,
-					exclude_filetypes = { "help", "NvimTree" },
+					exclude_filetypes = { "help" },
 					max_depth = 4,
 				},
 				highlights = {
@@ -59,8 +63,6 @@ require("lualine").setup({
 				custom_icons = {
 					gitrebase = { "", "DevIconGitCommit" },
 					help = { "󰋖", "DevIconTxt" },
-					trouble = { "󰔫", "DevIconGitConfig" },
-					Trouble = { "󰔫", "DevIconGitConfig" },
 				},
 				cond = function()
 					return vim.bo.filetype ~= "oil"
@@ -76,11 +78,10 @@ require("lualine").setup({
 		},
 		lualine_x = { "filetype" },
 		lualine_y = { "searchcount", "progress" },
-		lualine_z = { "location", "showcmd" },
+		lualine_z = { "location" },
 	},
 	inactive_sections = {
-		lualine_a = {},
-		lualine_b = {
+		lualine_a = {
 			{
 				function()
 					return vim.g.SSH_CLIENT and ("Remote: %s"):format(vim.uv.os_gethostname()) or ""
@@ -91,6 +92,8 @@ require("lualine").setup({
 				"branch",
 				icon = "",
 			},
+		},
+		lualine_b = {
 			{
 				"diagnostics",
 				sources = { "nvim_diagnostic" },
@@ -112,8 +115,8 @@ require("lualine").setup({
 				end,
 			},
 		},
-		lualine_x = { "filetype" },
+		lualine_x = {},
 		lualine_y = {},
-		lualine_z = {},
+		lualine_z = { "filetype" },
 	},
 })
