@@ -44,18 +44,12 @@ require("conform").setup({
 		},
 	},
 })
+
 local cmp = require("cmp")
 local cmp_lsp = require("cmp_nvim_lsp")
 local capabilities =
 	vim.tbl_deep_extend("force", {}, vim.lsp.protocol.make_client_capabilities(), cmp_lsp.default_capabilities())
 
-require("fidget").setup({
-	notification = {
-		window = {
-			winblend = 85,
-		},
-	},
-})
 require("mason").setup({
 	ui = {
 		border = "single",
@@ -69,6 +63,7 @@ require("mason").setup({
 		},
 	},
 })
+
 require("mason-lspconfig").setup({
 	ensure_installed = {
 		"lua_ls",
@@ -76,28 +71,50 @@ require("mason-lspconfig").setup({
 	},
 })
 
+require("cmp-tailwind-colors").setup({
+	enable_alpha = true,
+	format = function(itemColor)
+		return {
+			fg = itemColor,
+			bg = nil,
+			text = "██ ",
+		}
+	end,
+})
+
 local cmp_select = { behavior = cmp.SelectBehavior.Select }
 
 cmp.setup({
-	-- snippet = {
-	-- 	expand = function(args)
-	-- 		require("luasnip").lsp_expand(args.body)
-	-- 	end,
-	-- },
 	mapping = cmp.mapping.preset.insert({
 		["<C-p>"] = cmp.mapping.select_prev_item(cmp_select),
 		["<C-n>"] = cmp.mapping.select_next_item(cmp_select),
+		["<C-CR>"] = cmp.mapping.complete(),
 		["<Tab>"] = cmp.mapping.confirm({ select = true }),
 		["<CR>"] = cmp.mapping.confirm({ select = true }),
 		["<C-d>"] = cmp.mapping.complete(),
 	}),
 	sources = cmp.config.sources({
 		{ name = "nvim_lsp" },
-		-- { name = "luasnip" },
 		{ name = "path" },
 	}, {
-		{ name = "buffer", keyword_length = 3 },
+		{ name = "buffer", keyword_length = 7 },
 	}),
+	formatting = {
+		fields = { "kind", "abbr", "menu" },
+		format = function(entry, item)
+			local original_kind = item.kind
+			item.menu = original_kind
+			item.menu_hl_group = "CmpItemKind" .. original_kind
+			item = require("cmp-tailwind-colors").format(entry, item)
+			if item.kind_hl_group and string.find(item.kind_hl_group, "^cmp_tailwind_colors_") then
+			else
+				item.kind = ""
+				item.kind_hl_group = ""
+			end
+
+			return item
+		end,
+	},
 	window = {
 		completion = {
 			border = "single",
@@ -106,10 +123,11 @@ cmp.setup({
 			max_height = 10,
 			scrollbar = true,
 			scrolloff = 3,
+			side_padding = 0,
 		},
 		documentation = {
 			border = "single",
-			winblend = 5,
+			winblend = 0,
 			winhighlight = "Normal:NormalFloat,FloatBorder:FloatBorder,CursorLine:PmenuSel,Search:None",
 			max_height = 10,
 		},
@@ -121,6 +139,12 @@ cmp.setup.cmdline({ "/", "?" }, {
 	sources = {
 		{ name = "buffer" },
 	},
+	window = {
+		completion = {
+			max_height = 4,
+			winhighlight = "Normal:NormalFloat,FloatBorder:FloatBorder,CursorLine:PmenuSel,Search:None",
+		},
+	},
 })
 
 cmp.setup.cmdline(":", {
@@ -130,16 +154,11 @@ cmp.setup.cmdline(":", {
 	}, {
 		{ name = "cmdline" },
 	}),
-})
-
-vim.diagnostic.config({
-	float = {
-		focusable = false,
-		style = "minimal",
-		border = "rounded",
-		source = true,
-		header = "",
-		prefix = "",
+	window = {
+		completion = {
+			max_height = 5,
+			winhighlight = "Normal:NormalFloat,FloatBorder:FloatBorder,CursorLine:PmenuSel,Search:None",
+		},
 	},
 })
 
