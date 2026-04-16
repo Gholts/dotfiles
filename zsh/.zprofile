@@ -55,3 +55,4 @@ export VISUAL=$EDITOR
 export FZF_DEFAULT_OPTS_FILE="$XDG_CONFIG_HOME/fzf/config"
 export FZF_DEFAULT_COMMAND="fd -iIH"
 export FZF_CTRL_T_COMMAND="fd"
+export FZF_CTRL_R_OPTS="--no-preview --layout=reverse --margin=0,49%,0,0"
