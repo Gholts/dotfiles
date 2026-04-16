@@ -15,14 +15,14 @@ require("fzf-lua").setup({
 		},
 		preview = {
 			default = "bat", -- override the default previewer?
-			border = "rounded", -- preview border: accepts both `nvim_open_win`
+			border = "single", -- preview border: accepts both `nvim_open_win`
 			-- and fzf values (e.g. "border-top", "none")
 			-- native fzf previewers (bat/cat/git/etc)
 			-- can also be set to `fun(winopts, metadata)`
 			wrap = false, -- preview line wrap (fzf's 'wrap|nowrap')
 			hidden = false, -- start preview hidden
 			vertical = "down:50%", -- up|down:size
-			horizontal = "right:50%", -- right|left:size
+			horizontal = "right:60%", -- right|left:size
 			layout = "flex", -- horizontal|vertical|flex
 			flip_columns = 100, -- #cols to switch to horizontal on flex
 			-- Only used with the builtin previewer:
