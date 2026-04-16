@@ -1,14 +1,22 @@
 local map = vim.keymap.set
 local cmd, fn, api = vim.cmd, vim.fn, vim.api
 ------------------------------------------------------------------
+map("x", "p", "P")
+map({ "n", "v" }, "gl", "g_") -- jump to last character of the line
+map({ "n", "v" }, "gh", "^") -- jump to first character of the line
+---------------------------------------------------------------cmp
+map("i", "<C-n>", "<Nop>")
+map("i", "<C-p>", "<Nop>")
+------------------------------------------------------------------
 map("n", "<leader>s", "<cmd>w<cr>") -- save
 map("n", "<Bslash>q", "<cmd>q!<CR>") -- force quit
 map("n", "<leader>qq", "<cmd>q<cr>") -- quit
 map("n", "<leader>ro", "<cmd>so<CR>") -- source configs
 ------------------------------------------------------------buffer
+map("n", "<leader><tab>", "<c-w>w") -- switch to next window
 map("n", "gn", "<cmd>tabnew<cr>") -- open new tab
 map("n", "gw", "<cmd>tabclose<cr>") -- close tab
-
+map("n", "<leader>w", "<cmd>lua MiniBufremove.delete(0, false)<cr>") -- close current buffer
 api.nvim_create_autocmd("FileType", {
 	pattern = "help",
 	callback = function(event)
@@ -17,17 +25,15 @@ api.nvim_create_autocmd("FileType", {
 	end,
 })
 ------------------------------------------------------------------
-map("n", "<leader>w", "<cmd>lua MiniBufremove.delete(0, false)<cr>") -- close current buffer
 map("n", "<C-c>", "<cmd>lua require('oil').toggle_float()<cr>") -- toggle oil float
 map("n", "-", "<cmd>Oil<cr>") -- open oil
-map("n", "<c-/>", "<cmd>FzfLua files<cr>") -- fuzzy file search fzf-lua
-map("n", "<d-c-v>", "<cmd>UndotreeToggle<cr>") -- toggle undotree
-map("n", "<leader><tab>", "<c-w>w") -- switch to next window
---------------------------------------------------------navigation
-map({ "n", "v" }, "gl", "g_") -- jump to last character of the line
-map({ "n", "v" }, "gh", "^") -- jump to first character of the line
-map("n", "<leader>o", "i<enter><esc>k$a") -- move what behind the cursor to next line, and into insert keep same line
-map("n", "<leader>O", "DO<esc>pj$a") -- move what behind the cursor to previous line, and into insert keep same line
+------------------------------------------------------------------
+map("n", "<C-/>", "<cmd>FzfLua files<cr>") -- fuzzy file search fzf-lua
+map("n", "<C-f>", "<cmd>FzfLua grep<cr>") -- fuzzy rg search fzf-lua
+map("n", "<leader>xx", "<cmd>FzfLua diagnostics_document<CR>") -- fuzzy error search fzf-lua
+map("n", "<leader>xX", "<cmd>FzfLua diagnostics_workspace<CR>") -- fuzzy workspace error search fzf-lua
+------------------------------------------------------------------
+map("n", "<D-C-v>", "<cmd>UndotreeToggle<cr>") -- toggle undotree
 ------------------------------------toggle_diagnostic_virtual_text
 map("n", "<leader>vt", function()
 	local current_config = vim.diagnostic.config() or {}
