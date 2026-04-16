@@ -77,7 +77,7 @@ require("cmp-tailwind-colors").setup({
 		return {
 			fg = itemColor,
 			bg = nil,
-			text = "██ ",
+			text = " ██",
 		}
 	end,
 })
