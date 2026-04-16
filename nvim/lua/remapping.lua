@@ -20,8 +20,8 @@ map("n", "<leader>w", "<cmd>lua MiniBufremove.delete(0, false)<cr>") -- close cu
 api.nvim_create_autocmd("FileType", {
 	pattern = "help",
 	callback = function(event)
-		map("n", "F", "<C-w>T", { buffer = event.buf, silent = true }) -- quick fullscreen help buffer
-		map("n", "q", "<cmd>q<cr>", { buffer = event.buf, silent = true }) -- quit help screen
+		cmd("only")
+		map("n", "q", "<cmd>lua MiniBufremove.delete(0, false)<cr>", { buffer = event.buf }) -- quit help screen
 	end,
 })
 ------------------------------------------------------------------
