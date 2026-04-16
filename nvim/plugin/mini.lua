@@ -1,3 +1,6 @@
+require("mini.icons").setup()
+MiniIcons.mock_nvim_web_devicons()
+
 require("mini.bufremove").setup()
 require("mini.splitjoin").setup()
 require("mini.pairs").setup()
@@ -15,10 +18,9 @@ require("mini.surround").setup({
 	search_method = "cover_or_next",
 	silent = true,
 })
-
 require("mini.hipatterns").setup({
 	highlighters = {
-		fix = { pattern = "%f[%w]()FIX()%f[%W]", group = "MiniHipatternsFix" },
+		fix = { pattern = "%f[%w]()FIX()%f[%W]", group = "MiniHipatternsFixme" },
 		todo = { pattern = "%f[%w]()TODO()%f[%W]", group = "MiniHipatternsTodo" },
 		note = { pattern = "%f[%w]()NOTE()%f[%W]", group = "MiniHipatternsNote" },
 
@@ -26,7 +28,6 @@ require("mini.hipatterns").setup({
 		hex_color = require("mini.hipatterns").gen_highlighter.hex_color(),
 	},
 })
-
 require("mini.indentscope").setup({
 	mappings = {
 		object_scope = "",
@@ -42,7 +43,6 @@ require("mini.indentscope").setup({
 	},
 	symbol = "│",
 })
-
 require("mini.move").setup({
 	mappings = {
 		left = "<d-h>",
