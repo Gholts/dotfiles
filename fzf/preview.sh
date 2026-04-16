@@ -27,7 +27,7 @@ fi
 
 if [[ -d "$file" ]]; then
     if command -v eza >/dev/null; then
-        { printf "Directory: \033[1m%s\033[0m\n" "$(basename "$file")" && eza --tree --level=3 --color=always --ignore-glob ".DS_Store|.localized|.idea|.vscode" "$file"; }
+        { eza --tree --level=3 --color=always --ignore-glob ".DS_Store|.localized|.idea|.vscode" "$file"; }
 
     else
         ls -laF "$file"
