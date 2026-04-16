@@ -19,6 +19,12 @@ Check out my [blog](https://proxies.foo/).
       <td>
         <img
           alt="image"
+          src="https://github.com/user-attachments/assets/d5aefb4b-49a7-4a5c-802a-5a18dc54fc20"
+        />
+      </td>
+      <td>
+        <img
+          alt="image"
           src="https://github.com/user-attachments/assets/98780506-d8bb-4d90-8a71-5bc252bffd95"
         />
       </td>
@@ -42,6 +48,12 @@ Check out my [blog](https://proxies.foo/).
       </td>
     </tr>
     <tr>
+      <td>
+        <img
+          alt="image"
+          src="https://github.com/user-attachments/assets/caff14f4-1ada-4f69-b0a7-50b37accf93e"
+        />
+      </td>
       <td>
         <img
           alt="image"
@@ -69,25 +81,3 @@ Check out my [blog](https://proxies.foo/).
     </tr>
   </tbody>
 </table>
-
-<table>
-  <tbody>
-    <tr>
-      <td>
-        <img
-          height="872"
-          alt="image"
-          src="https://github.com/user-attachments/assets/d5aefb4b-49a7-4a5c-802a-5a18dc54fc20"
-        />
-      </td>
-      <td>
-        <img
-          height="1011"
-          alt="image"
-          src="https://github.com/user-attachments/assets/236a42cf-9d27-432d-ac50-2757366874f2"
-        />
-      </td>
-    </tr>
-  </tbody>
-</table>
-
