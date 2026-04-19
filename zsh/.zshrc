@@ -29,6 +29,8 @@ zstyle ':fzf-tab:*' fzf-preview '[[ -d $realpath ]] && { echo "Directory: \e[1m$
 zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'                             # case insensitive
 autoload -U compinit && compinit -d "$XDG_CACHE_HOME"/zsh/zcompdump-"$ZSH_VERSION" # lazy load compeletion
 eval "$(starship init zsh)"                                                        # starship
+source <(fzf --zsh)                                                                # fzf
+source $(brew --prefix)/opt/antidote/share/antidote/antidote.zsh                   # antidote
 antidote load                                                                      # zsh plugins load
 #------------------------------------------------------------------
 #-- Function

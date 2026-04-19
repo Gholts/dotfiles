@@ -39,10 +39,6 @@ export NPM_CONFIG_TMP="$XDG_RUNTIME_DIR"/npm
 # bun
 export PATH="/Users/gholts/.cache/.bun/bin:$PATH"
 export PATH="$(brew --prefix)/opt/node@24/bin:$PATH"
-# fzf
-source <(fzf --zsh)
-# antidote
-source $(brew --prefix)/opt/antidote/share/antidote/antidote.zsh
 # cargo
 source "$XDG_DATA_HOME/cargo/env"
 #------------------------------------------------------------------
