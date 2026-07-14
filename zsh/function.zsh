@@ -29,6 +29,7 @@ nvim() {
     [[ $1 == , ]] && set -- .
     command nvim "$@"
 }
+alias remove="brew uninstall --cask --force --zap"
 alias server="bunx serve"
 alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
 #---------------------------------------------------------xdg_alias
