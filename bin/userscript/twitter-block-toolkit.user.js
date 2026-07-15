@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         X Block Toolkit
 // @namespace    gholts.x.block-toolkit
-// @version      2026.07.15.7
-// @description  Bulk-block members or followers of an open X List and add a native-style block button to posts.
+// @version      2026.07.15.16
+// @description  Bulk-block X Lists and add native-style block controls to posts and account suggestions.
 // @author       Gholts
 // @license      GNU Affero General Public License v3.0
 // @match        https://x.com/*
@@ -15,10 +15,16 @@
     "use strict";
 
     const API_PATH = "/i/api/1.1/blocks/create.json";
+    const INSTANCE_MARK = "__xBlockToolkitInstance";
     const AUTH_PATCH_MARK = "__xBlockToolkitAuthPatch";
-    const UNBLOCK_GUARD_MARK = "__xBlockToolkitUnblockGuard";
     const POST_BUTTON_ATTR = "data-x-block-toolkit-button";
     const POST_BUTTON_WRAPPER_ATTR = "data-x-block-toolkit-button-wrapper";
+    const SUGGESTION_BLOCK_ATTR = "data-x-block-toolkit-suggestion-block";
+    const SUGGESTION_ACTIONS_ATTR = "data-x-block-toolkit-suggestion-actions";
+    const HIDDEN_SUGGESTION_ATTR = "data-x-block-toolkit-hidden-suggestion";
+    const BLOCKED_PROFILE_SCREEN_ATTR =
+        "data-x-block-toolkit-blocked-profile-screen";
+    const VIEW_POSTS_CLICKED_ATTR = "data-x-block-toolkit-view-posts-clicked";
     const SUPPRESSED_NOTICE_ATTR = "data-x-block-toolkit-suppressed-notice";
     const PANEL_ID = "x-block-toolkit-panel";
     const STYLE_ID = "x-block-toolkit-style";
@@ -26,12 +32,29 @@
     const BLOCK_CONCURRENCY = 4;
     const REQUEST_GAP_MS = 120;
     const SCAN_WAIT_MS = 180;
+    const SCAN_BOTTOM_IDLE_MS = 3000;
+    const SCAN_LOADING_TIMEOUT_MS = 15000;
     const SEARCH_BLOCK_NOTICE =
         "Thanks. X will use this to make your timeline better.";
     const pageWindow =
         typeof unsafeWindow === "object" && unsafeWindow
             ? unsafeWindow
             : window;
+    const previousInstance = pageWindow[INSTANCE_MARK];
+    const retainedSuggestionIds =
+        previousInstance?.recentlyBlockedSuggestionIds?.add &&
+        previousInstance?.recentlyBlockedSuggestionIds?.has
+            ? previousInstance.recentlyBlockedSuggestionIds
+            : new Set();
+    const instance = {
+        disposed: false,
+        observer: null,
+        scanFrameId: 0,
+        domReadyHandler: null,
+        unblockGuardHandler: null,
+        recentlyBlockedSuggestionIds: retainedSuggestionIds,
+        dispose: disposeInstance,
+    };
 
     const bulk = {
         running: false,
@@ -40,11 +63,11 @@
         failed: 0,
         total: 0,
     };
+    const recentlyBlockedSuggestionIds = instance.recentlyBlockedSuggestionIds;
 
-    let bearerToken = "";
-    let nativeFetch = null;
-    let scanScheduled = false;
+    let authState = null;
     let toastTimer = 0;
+    let postBlockQueue = Promise.resolve();
 
     class CancelledError extends Error {}
 
@@ -54,7 +77,7 @@
 
         try {
             if (typeof headers.get === "function") {
-                return headers.get(name) || headers.get(wanted) || "";
+                return headers.get(name) || "";
             }
         } catch {}
 
@@ -74,30 +97,44 @@
         return "";
     }
 
-    function captureBearer(value) {
+    function captureBearer(state, value) {
         const token = String(value || "").trim();
-        if (/^Bearer\s+\S+/i.test(token)) bearerToken = token;
+        if (/^Bearer\s+\S+/i.test(token)) state.bearerToken = token;
     }
 
-    function captureFetchHeaders(input, init) {
+    function captureFetchHeaders(state, input, init) {
         try {
-            captureBearer(getHeader(init?.headers, "authorization"));
-            captureBearer(getHeader(input?.headers, "authorization"));
+            captureBearer(state, getHeader(init?.headers, "authorization"));
+            captureBearer(state, getHeader(input?.headers, "authorization"));
         } catch {}
     }
 
     function patchAuthHeaders() {
-        const currentFetch = pageWindow.fetch;
-        if (typeof currentFetch === "function") {
-            nativeFetch = currentFetch.bind(pageWindow);
+        const shared = pageWindow[AUTH_PATCH_MARK];
+        if (
+            shared &&
+            typeof shared === "object" &&
+            shared.kind === "x-block-toolkit-auth" &&
+            typeof shared.nativeFetch === "function"
+        ) {
+            authState = shared;
+            return;
         }
 
-        if (pageWindow[AUTH_PATCH_MARK]) return;
-        pageWindow[AUTH_PATCH_MARK] = true;
+        const currentFetch = pageWindow.fetch;
+        authState = {
+            kind: "x-block-toolkit-auth",
+            bearerToken: "",
+            nativeFetch:
+                typeof currentFetch === "function"
+                    ? currentFetch.bind(pageWindow)
+                    : null,
+        };
+        pageWindow[AUTH_PATCH_MARK] = authState;
 
         if (typeof currentFetch === "function") {
             pageWindow.fetch = function (input, init) {
-                captureFetchHeaders(input, init);
+                captureFetchHeaders(authState, input, init);
                 return currentFetch.apply(this, arguments);
             };
         }
@@ -107,7 +144,7 @@
         if (typeof originalSetHeader === "function") {
             Xhr.prototype.setRequestHeader = function (name, value) {
                 if (String(name || "").toLowerCase() === "authorization") {
-                    captureBearer(value);
+                    captureBearer(authState, value);
                 }
                 return originalSetHeader.apply(this, arguments);
             };
@@ -140,11 +177,11 @@
 
     async function waitForAuth(timeoutMs = 12000, cancellable = false) {
         const deadline = Date.now() + timeoutMs;
-        while (!bearerToken && Date.now() < deadline) {
+        while (!authState?.bearerToken && Date.now() < deadline) {
             if (cancellable && bulk.cancelled) throw new CancelledError();
             await delay(200);
         }
-        if (!bearerToken) {
+        if (!authState?.bearerToken) {
             throw new Error("X auth not captured. Reload X, then try again.");
         }
     }
@@ -175,9 +212,11 @@
         return `X block request failed (${response.status}${detail ? `: ${detail}` : ""})`;
     }
 
-    async function blockAccount(target, options = {}) {
+    async function blockAccount(userId, options = {}) {
         await waitForAuth(12000, Boolean(options.cancellable));
-        if (!nativeFetch) throw new Error("X fetch API unavailable.");
+        if (!authState?.nativeFetch)
+            throw new Error("X fetch API unavailable.");
+        if (!userId) throw new Error("No X account identifier found.");
 
         for (let attempt = 0; attempt < 5; attempt++) {
             if (options.cancellable && bulk.cancelled)
@@ -188,19 +227,17 @@
                 throw new Error("X CSRF token unavailable. Reload X.");
 
             const body = new URLSearchParams();
-            if (target.userId) body.set("user_id", target.userId);
-            else if (target.handle) body.set("screen_name", target.handle);
-            else throw new Error("No X account identifier found.");
+            body.set("user_id", userId);
             body.set("skip_status", "1");
             body.set("include_entities", "0");
 
-            const response = await nativeFetch(
+            const response = await authState.nativeFetch(
                 `${location.origin}${API_PATH}`,
                 {
                     method: "POST",
                     credentials: "include",
                     headers: {
-                        authorization: bearerToken,
+                        authorization: authState.bearerToken,
                         "content-type": "application/x-www-form-urlencoded",
                         "x-csrf-token": csrfToken,
                         "x-twitter-active-user": "yes",
@@ -239,9 +276,35 @@
         style.id = STYLE_ID;
         style.textContent = `
             [${POST_BUTTON_ATTR}][data-state="busy"] { opacity: 0.45; }
-            [${POST_BUTTON_ATTR}][data-state="blocked"] > div {
-                color: rgb(244, 33, 46) !important;
+            [${SUGGESTION_BLOCK_ATTR}] {
+                width: 32px !important;
+                min-width: 32px !important;
+                padding-right: 0 !important;
+                padding-left: 0 !important;
+                margin-right: 8px !important;
+                border-color: transparent !important;
+                background-color: transparent !important;
             }
+            [${SUGGESTION_BLOCK_ATTR}]:hover,
+            [${SUGGESTION_BLOCK_ATTR}]:focus,
+            [${SUGGESTION_BLOCK_ATTR}]:active {
+                border-color: transparent !important;
+                background-color: transparent !important;
+            }
+            [${SUGGESTION_BLOCK_ATTR}] svg {
+                flex: 0 0 18px !important;
+                width: 18px !important;
+                height: 18px !important;
+                color: rgb(113, 118, 123) !important;
+                fill: currentColor !important;
+            }
+            [${SUGGESTION_BLOCK_ATTR}][data-state="busy"] { opacity: 0.45; }
+            [${SUGGESTION_ACTIONS_ATTR}] {
+                flex-direction: row !important;
+                align-items: center !important;
+            }
+            [${HIDDEN_SUGGESTION_ATTR}] { display: none !important; }
+            [${BLOCKED_PROFILE_SCREEN_ATTR}] { display: none !important; }
             [${SUPPRESSED_NOTICE_ATTR}] { display: none !important; }
 
             #${PANEL_ID} {
@@ -305,6 +368,7 @@
     }
 
     function showToast(message, durationMs = 3500) {
+        if (instance.disposed) return;
         document.getElementById(TOAST_ID)?.remove();
         pageWindow.clearTimeout(toastTimer);
 
@@ -349,6 +413,23 @@
         throw new Error(errorMessage);
     }
 
+    function queuePostBlock(task) {
+        const pending = postBlockQueue.then(task, task);
+        postBlockQueue = pending.catch(() => {});
+        return pending;
+    }
+
+    function isBlockConfirmationFor(dialog, handle) {
+        const confirm = dialog?.querySelector(
+            '[data-testid="confirmationSheetConfirm"]',
+        );
+        const wanted = `@${handle}`.toLowerCase();
+        return (
+            (confirm?.textContent || "").trim().toLowerCase() === "block" &&
+            (dialog?.textContent || "").toLowerCase().includes(wanted)
+        );
+    }
+
     async function blockPostThroughNativeUi(article, handle) {
         const more = directDescendant(article, 'button[data-testid="caret"]');
         if (!more) throw new Error("Native More button unavailable.");
@@ -365,12 +446,8 @@
                         ),
                     );
                     const wanted = `@${handle}`.toLowerCase();
-                    return (
-                        items.find((item) =>
-                            (item.textContent || "")
-                                .toLowerCase()
-                                .includes(wanted),
-                        ) || (items.length === 1 ? items[0] : null)
+                    return items.find((item) =>
+                        (item.textContent || "").toLowerCase().includes(wanted),
                     );
                 },
                 3000,
@@ -380,9 +457,11 @@
 
             confirmation = await waitForUiElement(
                 () =>
-                    document.querySelector(
-                        '[data-testid="confirmationSheetDialog"]',
-                    ),
+                    Array.from(
+                        document.querySelectorAll(
+                            '[data-testid="confirmationSheetDialog"]',
+                        ),
+                    ).find((dialog) => isBlockConfirmationFor(dialog, handle)),
                 3000,
                 "Native block confirmation unavailable.",
             );
@@ -410,6 +489,14 @@
             }
             throw error;
         }
+    }
+
+    function resetPostButton(button, handle) {
+        if (!button.isConnected) return;
+        button.dataset.state = "ready";
+        button.disabled = false;
+        button.setAttribute("aria-label", `Block @${handle}`);
+        button.setAttribute("title", `Block @${handle}`);
     }
 
     function setBlockIcon(button) {
@@ -453,27 +540,32 @@
                 button.setAttribute("aria-label", `Blocking @${currentHandle}`);
 
                 try {
-                    await blockPostThroughNativeUi(article, currentHandle);
+                    const completed = await queuePostBlock(async () => {
+                        const latestHandle = postHandle(article);
+                        if (
+                            !article.isConnected ||
+                            !button.isConnected ||
+                            latestHandle.toLowerCase() !==
+                                currentHandle.toLowerCase()
+                        ) {
+                            return false;
+                        }
+
+                        await blockPostThroughNativeUi(article, currentHandle);
+                        return true;
+                    });
+                    if (!completed) {
+                        resetPostButton(button, currentHandle);
+                        return;
+                    }
 
                     // X owns success handling and timeline removal. If X keeps this
                     // post rendered, allow retry after its native UI settles.
                     pageWindow.setTimeout(() => {
-                        if (!button.isConnected) return;
-                        button.dataset.state = "ready";
-                        button.disabled = false;
-                        button.setAttribute(
-                            "aria-label",
-                            `Block @${currentHandle}`,
-                        );
-                        button.setAttribute("title", `Block @${currentHandle}`);
+                        resetPostButton(button, currentHandle);
                     }, 4000);
                 } catch (error) {
-                    button.dataset.state = "ready";
-                    button.disabled = false;
-                    button.setAttribute(
-                        "aria-label",
-                        `Block @${currentHandle}`,
-                    );
+                    resetPostButton(button, currentHandle);
                     showToast(error.message || "Block failed", 6000);
                 }
             },
@@ -547,6 +639,148 @@
         caretSlot.before(slot);
     }
 
+    function setSuggestionBlockIcon(button) {
+        const label = button.firstElementChild || button;
+        const svg = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "svg",
+        );
+        svg.setAttribute("aria-hidden", "true");
+        svg.setAttribute(
+            "class",
+            "r-4qtqp9 r-yyyyoo r-dnmrzs r-bnwqim r-lrvibr r-m6rgpd r-1nao33i r-16y2uox r-8kz0gk",
+        );
+        label.replaceChildren(svg);
+        setBlockIcon(button);
+    }
+
+    function setSuggestionHidden(cell, hidden) {
+        const row = cell.closest('[data-testid="cellInnerDiv"]') || cell;
+        row.toggleAttribute(HIDDEN_SUGGESTION_ATTR, hidden);
+    }
+
+    function isSuggestionCell(cell) {
+        if (location.pathname === "/i/connect_people") return true;
+        const complementary = cell.closest('[role="complementary"], aside');
+        if (!complementary) return false;
+        return Array.from(
+            complementary.querySelectorAll('h1, h2, [role="heading"]'),
+        ).some(
+            (heading) =>
+                (heading.textContent || "").trim() === "You might like",
+        );
+    }
+
+    function suggestionHandle(cell, action) {
+        const ariaMatch = (action.getAttribute("aria-label") || "").match(
+            /@([A-Za-z0-9_]+)/,
+        );
+        if (ariaMatch) return ariaMatch[1];
+
+        for (const link of cell.querySelectorAll('a[href^="/"]')) {
+            const match = (link.getAttribute("href") || "").match(
+                /^\/([A-Za-z0-9_]+)$/,
+            );
+            if (match) return match[1];
+        }
+        return "";
+    }
+
+    function configureSuggestionBlockButton(button, cell, userId, handle) {
+        button.setAttribute(SUGGESTION_BLOCK_ATTR, "");
+        button.removeAttribute("data-testid");
+        button.removeAttribute("aria-describedby");
+        button.removeAttribute("aria-expanded");
+        button.removeAttribute("aria-haspopup");
+        button.type = "button";
+        button.dataset.userId = userId;
+        button.dataset.state = "ready";
+        button.setAttribute("aria-label", `Block @${handle}`);
+        button.setAttribute("title", `Block @${handle}`);
+        setSuggestionBlockIcon(button);
+
+        for (const element of button.querySelectorAll("[id], [data-testid]")) {
+            element.removeAttribute("id");
+            element.removeAttribute("data-testid");
+        }
+
+        button.addEventListener(
+            "click",
+            async (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                event.stopImmediatePropagation();
+                if (button.dataset.state !== "ready") return;
+
+                button.dataset.state = "busy";
+                button.disabled = true;
+                button.setAttribute("aria-label", `Blocking @${handle}`);
+
+                try {
+                    await blockAccount(userId, {
+                        onRateLimit: (waitMs) =>
+                            showToast(
+                                `Rate limited. Retrying in ${Math.ceil(waitMs / 1000)}s.`,
+                                Math.min(waitMs, 10000),
+                            ),
+                    });
+                    recentlyBlockedSuggestionIds.add(userId);
+                    setSuggestionHidden(cell, true);
+                    showToast(`Blocked @${handle}`);
+                } catch (error) {
+                    button.dataset.state = "ready";
+                    button.disabled = false;
+                    button.setAttribute("aria-label", `Block @${handle}`);
+                    showToast(error.message || "Block failed", 6000);
+                }
+            },
+            true,
+        );
+    }
+
+    function addSuggestionBlockButton(cell) {
+        if (!isSuggestionCell(cell)) return;
+
+        const action = Array.from(
+            cell.querySelectorAll("button[data-testid]"),
+        ).find((button) =>
+            /^\d+-(?:follow|unfollow|unblock)$/.test(button.dataset.testid),
+        );
+        if (!action?.parentElement) return;
+
+        const match = action.dataset.testid.match(
+            /^(\d+)-(follow|unfollow|unblock)$/,
+        );
+        if (!match) return;
+        const [, userId, actionName] = match;
+        const existing = cell.querySelector(`[${SUGGESTION_BLOCK_ATTR}]`);
+        const shouldHide =
+            actionName === "unblock" ||
+            recentlyBlockedSuggestionIds.has(userId);
+        setSuggestionHidden(cell, shouldHide);
+
+        if (shouldHide) {
+            existing?.remove();
+            action.parentElement.removeAttribute(SUGGESTION_ACTIONS_ATTR);
+            return;
+        }
+
+        const handle = suggestionHandle(cell, action);
+        if (!handle) return;
+        action.parentElement.setAttribute(SUGGESTION_ACTIONS_ATTR, "");
+
+        const correctlyPlaced =
+            existing?.dataset.userId === userId &&
+            existing.parentElement === action.parentElement &&
+            existing.nextElementSibling === action;
+        if (correctlyPlaced) return;
+
+        existing?.remove();
+        const button = action.cloneNode(true);
+        configureSuggestionBlockButton(button, cell, userId, handle);
+        action.before(button);
+    }
+
     function isSupportedListHeading(element) {
         const text = (element?.textContent || "").trim();
         return text === "List members" || text === "List followers";
@@ -606,9 +840,41 @@
     }
 
     function installUnblockGuard() {
-        if (pageWindow[UNBLOCK_GUARD_MARK]) return;
-        pageWindow[UNBLOCK_GUARD_MARK] = true;
-        document.addEventListener("click", preventUnblockConfirmClick, true);
+        const handler = preventUnblockConfirmClick;
+        instance.unblockGuardHandler = handler;
+        document.addEventListener("click", handler, true);
+    }
+
+    function bypassBlockedProfileScreen() {
+        for (const emptyState of document.querySelectorAll(
+            '[data-testid="emptyState"]',
+        )) {
+            const text = (emptyState.textContent || "")
+                .replace(/\s+/g, " ")
+                .trim();
+            const button = emptyState.querySelector(
+                '[data-testid="empty_state_button_text"]',
+            );
+            const isBlockedProfile =
+                /@\w+ is blocked/i.test(text) &&
+                /Viewing posts (?:won’t|won't) unblock @/i.test(text) &&
+                (button?.textContent || "").trim().toLowerCase() ===
+                    "view posts";
+
+            emptyState.toggleAttribute(
+                BLOCKED_PROFILE_SCREEN_ATTR,
+                isBlockedProfile,
+            );
+            if (
+                !isBlockedProfile ||
+                button.hasAttribute(VIEW_POSTS_CLICKED_ATTR)
+            ) {
+                continue;
+            }
+
+            button.setAttribute(VIEW_POSTS_CLICKED_ATTR, "");
+            button.click();
+        }
     }
 
     function findListDialog() {
@@ -624,6 +890,7 @@
     }
 
     function updatePanel(status, buttonText) {
+        if (instance.disposed) return;
         const panel = document.getElementById(PANEL_ID);
         if (!panel) return;
         const statusElement = panel.querySelector(".x-block-toolkit-status");
@@ -738,24 +1005,32 @@
                 alreadyBlocked.add(userId);
                 targets.delete(userId);
             } else if (!alreadyBlocked.has(userId)) {
-                targets.set(userId, { userId });
+                targets.add(userId);
             }
         }
 
         return targets.size + alreadyBlocked.size - before;
     }
 
+    function listIsLoading(dialog) {
+        return Boolean(
+            dialog.querySelector(
+                '[role="progressbar"], [data-testid="spinner"]',
+            ),
+        );
+    }
+
     async function scanListMembers(dialog) {
         const scroller = findListScroller(dialog);
         if (!scroller) throw new Error("List scroller not found.");
 
-        const targets = new Map();
+        const targets = new Set();
         const alreadyBlocked = new Set();
         const initialScrollTop = scroller.scrollTop;
-        let stagnantRounds = 0;
+        let bottomWaitStartedAt = 0;
 
         try {
-            for (let pass = 0; pass < 5000 && stagnantRounds < 5; pass++) {
+            for (let pass = 0; pass < 5000; pass++) {
                 if (bulk.cancelled) throw new CancelledError();
 
                 const foundBeforeScroll = collectVisibleMembers(
@@ -789,10 +1064,28 @@
                 const grew = scroller.scrollHeight > oldHeight + 1;
                 const found = foundBeforeScroll + foundAfterScroll;
 
-                if (atBottom && !moved && !grew && found === 0) {
-                    stagnantRounds++;
-                } else {
-                    stagnantRounds = 0;
+                if (!atBottom || moved || grew || found > 0) {
+                    bottomWaitStartedAt = 0;
+                    continue;
+                }
+
+                const now = Date.now();
+                if (!bottomWaitStartedAt) bottomWaitStartedAt = now;
+
+                const loading = listIsLoading(dialog);
+                const waitMs = now - bottomWaitStartedAt;
+                if (loading) {
+                    updatePanel(
+                        `Loading more… ${targets.size} to block · ${alreadyBlocked.size} already blocked`,
+                        "Stop",
+                    );
+                }
+
+                if (
+                    (!loading && waitMs >= SCAN_BOTTOM_IDLE_MS) ||
+                    waitMs >= SCAN_LOADING_TIMEOUT_MS
+                ) {
+                    break;
                 }
             }
         } finally {
@@ -851,7 +1144,7 @@
                     while (!bulk.cancelled) {
                         const index = nextIndex++;
                         if (index >= bulk.total) return;
-                        const target = scan.targets[index];
+                        const userId = scan.targets[index];
 
                         updatePanel(
                             `Blocking ${bulk.blocked + bulk.failed}/${bulk.total}… ${workerCount} parallel`,
@@ -859,7 +1152,7 @@
                         );
 
                         try {
-                            await blockAccount(target, {
+                            await blockAccount(userId, {
                                 cancellable: true,
                                 onRateLimit: (waitMs) =>
                                     updatePanel(
@@ -871,11 +1164,7 @@
                         } catch (error) {
                             if (error instanceof CancelledError) return;
                             bulk.failed++;
-                            console.warn(
-                                "[XBlockToolkit]",
-                                target.userId,
-                                error,
-                            );
+                            console.warn("[XBlockToolkit]", userId, error);
                         }
 
                         updatePanel(
@@ -923,42 +1212,124 @@
     }
 
     function scanPage() {
-        scanScheduled = false;
+        if (instance.disposed) return;
+        instance.scanFrameId = 0;
         injectStyles();
         cancelVisibleUnblockConfirmations();
+        bypassBlockedProfileScreen();
         suppressSearchBlockNotices();
         for (const article of document.querySelectorAll(
             'article[data-testid="tweet"]',
         )) {
             addPostBlockButton(article);
         }
+        for (const cell of document.querySelectorAll(
+            '[data-testid="UserCell"]',
+        )) {
+            addSuggestionBlockButton(cell);
+        }
         ensureListPanel();
     }
 
     function scheduleScan() {
-        if (scanScheduled) return;
-        scanScheduled = true;
-        pageWindow.requestAnimationFrame(scanPage);
+        if (instance.disposed || instance.scanFrameId) return;
+        instance.scanFrameId = pageWindow.requestAnimationFrame(scanPage);
     }
 
     function startUi() {
+        if (instance.disposed) return;
         if (!document.documentElement) {
             pageWindow.setTimeout(startUi, 0);
             return;
         }
+        instance.domReadyHandler = null;
         installUnblockGuard();
         scanPage();
-        new MutationObserver(scheduleScan).observe(document.documentElement, {
+        instance.observer = new MutationObserver(scheduleScan);
+        instance.observer.observe(document.documentElement, {
             childList: true,
             subtree: true,
         });
     }
 
-    patchAuthHeaders();
-
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", startUi, { once: true });
-    } else {
-        startUi();
+    function cleanupInjectedUi() {
+        for (const element of document.querySelectorAll(
+            `[${POST_BUTTON_WRAPPER_ATTR}], [${POST_BUTTON_ATTR}], [${SUGGESTION_BLOCK_ATTR}]`,
+        )) {
+            element.remove();
+        }
+        for (const element of document.querySelectorAll(
+            `[${SUGGESTION_ACTIONS_ATTR}], [${HIDDEN_SUGGESTION_ATTR}], [${BLOCKED_PROFILE_SCREEN_ATTR}], [${VIEW_POSTS_CLICKED_ATTR}], [${SUPPRESSED_NOTICE_ATTR}]`,
+        )) {
+            element.removeAttribute(SUGGESTION_ACTIONS_ATTR);
+            element.removeAttribute(HIDDEN_SUGGESTION_ATTR);
+            element.removeAttribute(BLOCKED_PROFILE_SCREEN_ATTR);
+            element.removeAttribute(VIEW_POSTS_CLICKED_ATTR);
+            element.removeAttribute(SUPPRESSED_NOTICE_ATTR);
+        }
+        document.getElementById(PANEL_ID)?.remove();
+        document.getElementById(STYLE_ID)?.remove();
+        document.getElementById(TOAST_ID)?.remove();
     }
+
+    function disposeInstance() {
+        if (instance.disposed) return;
+        instance.disposed = true;
+        bulk.cancelled = true;
+        pageWindow.clearTimeout(toastTimer);
+
+        if (instance.scanFrameId) {
+            pageWindow.cancelAnimationFrame(instance.scanFrameId);
+            instance.scanFrameId = 0;
+        }
+        instance.observer?.disconnect();
+        instance.observer = null;
+
+        if (instance.domReadyHandler) {
+            document.removeEventListener(
+                "DOMContentLoaded",
+                instance.domReadyHandler,
+            );
+            instance.domReadyHandler = null;
+        }
+        if (instance.unblockGuardHandler) {
+            document.removeEventListener(
+                "click",
+                instance.unblockGuardHandler,
+                true,
+            );
+            instance.unblockGuardHandler = null;
+        }
+
+        if (pageWindow[INSTANCE_MARK] === instance) {
+            cleanupInjectedUi();
+            delete pageWindow[INSTANCE_MARK];
+        }
+    }
+
+    function initialize() {
+        try {
+            previousInstance?.dispose?.();
+        } catch (error) {
+            console.warn(
+                "[XBlockToolkit] Previous instance cleanup failed",
+                error,
+            );
+        }
+
+        cleanupInjectedUi();
+        pageWindow[INSTANCE_MARK] = instance;
+        patchAuthHeaders();
+
+        if (document.readyState === "loading") {
+            instance.domReadyHandler = startUi;
+            document.addEventListener("DOMContentLoaded", startUi, {
+                once: true,
+            });
+        } else {
+            startUi();
+        }
+    }
+
+    initialize();
 })();
