@@ -17,6 +17,9 @@ require("conform").setup({
 	formatters_by_ft = formatters_by_ft,
 	format_on_save = { timeout_ms = 500, lsp_format = "fallback" },
 	formatters = {
+		prettierd = {
+			prepend_args = { "--tab-width=4", "--no-use-tabs" },
+		},
 		applescript_mac = {
 			command = "bash",
 			args = {
