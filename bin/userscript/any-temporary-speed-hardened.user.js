@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Temporary Speed Kit
-// @namespace    local.temporary-speed.kit
+// @namespace    gholts.temporary-speed.kit
 // @version      2026.06.21
 // @description  Hold a key to speed up playing videos, release to restore.
 // @author       Gholts

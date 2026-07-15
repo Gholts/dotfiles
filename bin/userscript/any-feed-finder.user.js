@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Feed Finder Kit
-// @namespace    local.feed-finder.kit
+// @namespace    gholts.feed-finder.kit
 // @version      2026.06.21
 // @description  Find and copy RSS, Atom, and JSON feeds for the current page.
 // @author       Gholts

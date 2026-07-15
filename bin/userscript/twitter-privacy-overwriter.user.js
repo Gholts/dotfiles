@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         X Privacy Kit
-// @namespace    local.x.privacy-kit
+// @namespace    gholts.x.privacy-kit
 // @version      2026.06.21
 // @description  Disable X personalization preferences when auth tokens are available.
 // @author       Gholts

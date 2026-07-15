@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Monkeytype Translation Kit (TW)
-// @namespace    local.monkeytype.translation-kit
+// @namespace    gholts.monkeytype.translation-kit
 // @version      2026.06.21
 // @description  Show Traditional Chinese translation under the active Monkeytype word.
 // @author       Gholts

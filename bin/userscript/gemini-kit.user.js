@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Gemini Stability Kit
-// @namespace    local.gemini.stability-kit
+// @namespace    gholts.gemini.stability-kit
 // @version      2026.06.21
 // @description  Lock preferred Gemini model, normalize send hotkeys, and trim noisy UI.
 // @author       Gholts

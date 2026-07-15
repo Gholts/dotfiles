@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Twitch Stability Kit
-// @namespace    local.twitch.stability-kit
+// @namespace    gholts.twitch.stability-kit
 // @version      2026.07.11.9
 // @description  Max quality, channel points, live recovery, UI cleanup, and gentle playback keepalive for Twitch.
 // @author       Gholts
