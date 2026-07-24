@@ -21,7 +21,7 @@ alias ls="eza"
 alias la="eza -lah"
 alias tree="eza -T --level=4"
 alias tg="eza -1a --git-ignore"
-#----------------------------------------------------------packages
+#------------------------------------------------------------neovim
 alias vim="nvim"
 alias nvim.="nvim ."
 alias nvim,="nvim ."
@@ -29,6 +29,7 @@ nvim() {
     [[ $1 == , ]] && set -- .
     command nvim "$@"
 }
+#----------------------------------------------------------packages
 alias remove="brew uninstall --cask --force --zap"
 alias server="bunx serve"
 alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
