@@ -23,6 +23,7 @@ require("oil").setup({
 	keymaps_help = {
 		border = "single",
 	},
+	extra_scp_args = { "-O" },
 	view_options = {
 		show_hidden = true,
 		is_hidden_file = function(name)
