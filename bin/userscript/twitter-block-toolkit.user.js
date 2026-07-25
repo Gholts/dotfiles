@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         X Block Toolkit
 // @namespace    gholts.x.block-toolkit
-// @version      2026.07.15.16
+// @version      2026.07.25.18
 // @description  Bulk-block X Lists and add native-style block controls to posts and account suggestions.
 // @author       Gholts
 // @license      GNU Affero General Public License v3.0
@@ -34,7 +34,7 @@
     const SCAN_WAIT_MS = 180;
     const SCAN_BOTTOM_IDLE_MS = 3000;
     const SCAN_LOADING_TIMEOUT_MS = 15000;
-    const SEARCH_BLOCK_NOTICE =
+    const BLOCK_NOTICE =
         "Thanks. X will use this to make your timeline better.";
     const pageWindow =
         typeof unsafeWindow === "object" && unsafeWindow
@@ -786,18 +786,13 @@
         return text === "List members" || text === "List followers";
     }
 
-    function suppressSearchBlockNotices() {
-        const isLiveSearch =
-            location.pathname === "/search" &&
-            new URLSearchParams(location.search).get("f") === "live";
-
+    function suppressBlockNotices() {
         for (const cell of document.querySelectorAll(
             '[data-testid="cellInnerDiv"]',
         )) {
             const text = (cell.textContent || "").replace(/\s+/g, " ").trim();
             const isBlockNotice =
-                isLiveSearch &&
-                text === SEARCH_BLOCK_NOTICE &&
+                text === BLOCK_NOTICE &&
                 !cell.querySelector('article[data-testid="tweet"]');
             cell.toggleAttribute(SUPPRESSED_NOTICE_ATTR, isBlockNotice);
         }
@@ -1217,7 +1212,7 @@
         injectStyles();
         cancelVisibleUnblockConfirmations();
         bypassBlockedProfileScreen();
-        suppressSearchBlockNotices();
+        suppressBlockNotices();
         for (const article of document.querySelectorAll(
             'article[data-testid="tweet"]',
         )) {
