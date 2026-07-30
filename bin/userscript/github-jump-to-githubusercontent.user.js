@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         GitHub Raw Jump Kit
 // @namespace    gholts.github.jump-to-githubusercontent
-// @version      2026.07.11
+// @version      2026.07.30.2
 // @description  Add GitHub-style jumps between blob pages and raw.githubusercontent.com.
 // @author       Gholts
 // @license      GNU Affero General Public License v3.0
@@ -21,14 +21,29 @@
     const STORE = "githubRawJumpKit.";
     const HEADER_ID = "github-raw-jump-header-button";
     const RAW_ID = "github-raw-jump-page-button";
-    const WRAP = "data-github-raw-jump";
     const RAW_LINKS =
-        'a[data-testid="raw-button"],a[href*="/raw/"],a[href*="?raw=1"]';
+        'a[data-testid="raw-button"],a[href^="https://raw.githubusercontent.com/"],a[href*="/raw/"],a[href*="?raw=1"]';
     const BUTTON_GROUP = '[data-component="ButtonGroup"]';
-    const FALLBACK_CLASS =
-        "prc-Button-ButtonBase-9n-Xk LinkButton-module__linkButton__nFnov BlobViewHeader-module__LinkButton__X9kx2";
-    const FALLBACK_HTML =
-        '<span data-component="buttonContent" data-align="center" class="prc-Button-ButtonContent-Iohp5"><span data-component="text" class="prc-Button-Label-FWkx3">Raw CDN</span></span>';
+    const HEADER_STYLE = [
+        "align-items:center",
+        "background:var(--button-default-bgColor-rest,var(--bgColor-muted,Canvas))",
+        "border:1px solid var(--button-default-borderColor-rest,var(--borderColor-default,ButtonBorder))",
+        "border-radius:6px",
+        "box-shadow:var(--button-default-shadow-rest,0 1px 0 rgba(31,35,40,.04))",
+        "box-sizing:border-box",
+        "color:var(--button-default-fgColor-rest,var(--fgColor-default,CanvasText))",
+        "display:inline-flex",
+        "flex:0 0 auto",
+        "font-size:12px",
+        "font-weight:500",
+        "justify-content:center",
+        "line-height:18px",
+        "margin-left:8px",
+        "min-height:28px",
+        "padding:3px 8px",
+        "text-decoration:none",
+        "white-space:nowrap",
+    ].join(";");
     const DEFAULTS = { headerButton: true, rawPageButton: true, debug: false };
     const MENUS = [
         ["headerButton", "Header button"],
@@ -123,53 +138,24 @@
 
     function rawLink() {
         return [...document.querySelectorAll(RAW_LINKS)].find((link) => {
-            if (link.id === HEADER_ID) return false;
-            return (
-                link.dataset.testid === "raw-button" ||
-                /\braw\b/i.test(link.textContent)
-            );
+            return link.id !== HEADER_ID && Boolean(toRaw(link.href));
         });
     }
 
-    function setLabel(button, label) {
-        const node =
-            button.querySelector("[data-component='text']") ||
-            button.querySelector(".Button-label");
-        if (node) node.textContent = label;
-        else button.textContent = label;
-    }
-
-    function normalize(button, template, href) {
+    function normalize(button, href) {
         button.id = HEADER_ID;
         button.href = href;
-        button.className = template?.className || FALLBACK_CLASS;
-        button.dataset.testid = "raw-githubusercontent-button";
         button.setAttribute("aria-label", "Open raw.githubusercontent.com");
-        button.setAttribute("data-component", "LinkButton");
-        button.setAttribute("data-loading", "false");
-        button.setAttribute("data-no-visuals", "true");
-        button.setAttribute("data-size", "small");
         button.setAttribute("data-turbo", "false");
-        button.setAttribute("data-variant", "default");
-        button.removeAttribute("aria-labelledby");
-        button.removeAttribute("data-discover");
-        button.removeAttribute("download");
-        button.removeAttribute("target");
-        if (!button.querySelector("[data-component='buttonContent']")) {
-            button.innerHTML = FALLBACK_HTML;
-        }
-        setLabel(button, "Raw CDN");
+        button.style.cssText = HEADER_STYLE;
+        if (button.textContent !== "Raw CDN") button.textContent = "Raw CDN";
     }
 
     function removeHeader() {
-        const button = document.getElementById(HEADER_ID);
-        const wrap = button?.closest(`[${WRAP}="true"]`);
-        if (wrap) wrap.remove();
-        else button?.remove();
+        document.getElementById(HEADER_ID)?.remove();
     }
 
     function renderGitHub() {
-        document.getElementById(RAW_ID)?.remove();
         const parts = location.pathname.split("/").filter(Boolean);
         if (!config.headerButton || parts[2] !== "blob") {
             removeHeader();
@@ -177,33 +163,29 @@
         }
 
         const raw = rawLink();
-        const href = toRaw(raw?.href || location.href);
-        const group = raw?.closest(BUTTON_GROUP);
+        const href = raw && toRaw(raw.href);
         const parent = raw?.parentElement;
-        if (!raw || !href || !group || parent?.parentElement !== group) {
+        const anchor =
+            raw?.closest(BUTTON_GROUP) ||
+            (parent?.children.length === 1 ? parent : raw);
+        if (!raw || !href || !anchor?.parentElement) {
             log("toolbar not ready");
             return;
         }
 
         const current = document.getElementById(HEADER_ID);
-        if (current?.closest(BUTTON_GROUP) === group) {
-            const wrap = current.closest(`[${WRAP}="true"]`);
-            if (wrap) wrap.className = parent.className;
-            normalize(current, raw, href);
+        if (current?.parentElement === anchor.parentElement) {
+            normalize(current, href);
             return;
         }
 
         removeHeader();
-        const wrap = parent.cloneNode(false);
-        wrap.setAttribute(WRAP, "true");
-        const button = raw.cloneNode(true);
-        normalize(button, raw, href);
-        wrap.appendChild(button);
-        parent.after(wrap);
+        const button = document.createElement("a");
+        normalize(button, href);
+        anchor.after(button);
     }
 
     function renderRaw() {
-        removeHeader();
         const href = toGitHub(location.href);
         const current = document.getElementById(RAW_ID);
         if (!config.rawPageButton || !href || !document.body) {
@@ -239,7 +221,9 @@
 
     function render() {
         if (location.hostname === "github.com") renderGitHub();
-        if (location.hostname === "raw.githubusercontent.com") renderRaw();
+        else if (location.hostname === "raw.githubusercontent.com") {
+            renderRaw();
+        }
     }
 
     function schedule() {
