@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         X Block Toolkit
 // @namespace    gholts.x.block-toolkit
-// @version      2026.07.25.18
-// @description  Bulk-block X Lists and add native-style block controls to posts and account suggestions.
+// @version      2026.08.01.19
+// @description  Bulk-block X Lists and Communities and add native-style block controls to posts and account rows.
 // @author       Gholts
 // @license      GNU Affero General Public License v3.0
 // @match        https://x.com/*
@@ -661,6 +661,12 @@
 
     function isSuggestionCell(cell) {
         if (location.pathname === "/i/connect_people") return true;
+        if (
+            /^\/i\/communities\/\d+\/members\/?$/.test(location.pathname) &&
+            cell.closest('[data-testid="primaryColumn"]')
+        ) {
+            return true;
+        }
         const complementary = cell.closest('[role="complementary"], aside');
         if (!complementary) return false;
         return Array.from(
@@ -884,6 +890,74 @@
         return null;
     }
 
+    function findCommunityMembersSurface() {
+        if (!/^\/i\/communities\/\d+\/members\/?$/.test(location.pathname)) {
+            return null;
+        }
+
+        const primaryColumn = document.querySelector(
+            '[data-testid="primaryColumn"]',
+        );
+        const root = primaryColumn;
+        if (!root) return null;
+
+        const heading = Array.from(
+            root.querySelectorAll('[role="heading"], h1, h2'),
+        ).find((element) => (element.textContent || "").trim() === "Members");
+        if (!heading) return null;
+
+        let header = heading.parentElement;
+        while (
+            header &&
+            header !== root &&
+            !header.querySelector(
+                'button[data-testid="app-bar-back"], button[aria-label="Back"]',
+            )
+        ) {
+            header = header.parentElement;
+        }
+        if (!header || header === root) return null;
+
+        return {
+            kind: "community",
+            root,
+            heading,
+            header,
+            listType: "members",
+            panelLabel: "X Community member blocker",
+        };
+    }
+
+    function findBulkSurface() {
+        const dialog = findListDialog();
+        if (dialog) {
+            const heading = Array.from(
+                dialog.querySelectorAll(
+                    '#modal-header, [role="heading"], h1, h2',
+                ),
+            ).find(isSupportedListHeading);
+            const close = dialog.querySelector(
+                'button[data-testid="app-bar-close"]',
+            );
+            const header = close?.parentElement?.parentElement;
+            if (!heading || !header?.contains(heading)) return null;
+
+            return {
+                kind: "list",
+                root: dialog,
+                heading,
+                header,
+                listType:
+                    heading.textContent.trim() === "List followers"
+                        ? "followers"
+                        : "members",
+                panelLabel: "X List blocker",
+            };
+        }
+
+        return findCommunityMembersSurface();
+    }
+
     function updatePanel(status, buttonText) {
         if (instance.disposed) return;
         const panel = document.getElementById(PANEL_ID);
@@ -905,34 +979,20 @@
         }
     }
 
-    function ensureListPanel() {
-        const dialog = findListDialog();
+    function ensureBulkPanel() {
+        const surface = findBulkSurface();
         const existing = document.getElementById(PANEL_ID);
-        if (!dialog) {
+        if (!surface) {
             existing?.remove();
             return;
         }
-        if (existing && dialog.contains(existing)) return;
+        if (existing && surface.root.contains(existing)) return;
         existing?.remove();
-
-        const heading = Array.from(
-            dialog.querySelectorAll('#modal-header, [role="heading"], h1, h2'),
-        ).find(isSupportedListHeading);
-        const close = dialog.querySelector(
-            'button[data-testid="app-bar-close"]',
-        );
-        const header = close?.parentElement?.parentElement;
-        if (!heading || !header?.contains(heading)) return;
-
-        const listType =
-            heading.textContent.trim() === "List followers"
-                ? "followers"
-                : "members";
 
         const panel = document.createElement("div");
         panel.id = PANEL_ID;
         panel.setAttribute("role", "region");
-        panel.setAttribute("aria-label", "X list blocker");
+        panel.setAttribute("aria-label", surface.panelLabel);
 
         const status = document.createElement("div");
         status.className = "x-block-toolkit-status";
@@ -941,9 +1001,15 @@
 
         const button = document.createElement("button");
         button.type = "button";
-        button.textContent = `Block all ${listType}`;
-        button.title = `Block all ${listType} of this list`;
-        button.setAttribute("aria-label", `Block all ${listType}`);
+        button.textContent = `Block all ${surface.listType}`;
+        button.title =
+            surface.kind === "community"
+                ? "Block all members of this Community"
+                : `Block all ${surface.listType} of this list`;
+        button.setAttribute(
+            "aria-label",
+            `Block all ${surface.listType}`,
+        );
         button.addEventListener("click", () => {
             if (bulk.running) {
                 bulk.cancelled = true;
@@ -954,7 +1020,7 @@
         });
 
         panel.append(status, button);
-        header.appendChild(panel);
+        surface.header.appendChild(panel);
     }
 
     function findListScroller(dialog) {
@@ -975,10 +1041,10 @@
         return candidates[0] || null;
     }
 
-    function collectVisibleMembers(dialog, targets, alreadyBlocked) {
+    function collectVisibleMembers(root, targets, alreadyBlocked) {
         const before = targets.size + alreadyBlocked.size;
 
-        for (const cell of dialog.querySelectorAll(
+        for (const cell of root.querySelectorAll(
             '[data-testid="UserCell"]',
         )) {
             const action = Array.from(
@@ -1007,17 +1073,20 @@
         return targets.size + alreadyBlocked.size - before;
     }
 
-    function listIsLoading(dialog) {
+    function listIsLoading(root) {
         return Boolean(
-            dialog.querySelector(
+            root.querySelector(
                 '[role="progressbar"], [data-testid="spinner"]',
             ),
         );
     }
 
-    async function scanListMembers(dialog) {
-        const scroller = findListScroller(dialog);
-        if (!scroller) throw new Error("List scroller not found.");
+    async function scanListMembers(surface) {
+        const scroller =
+            surface.kind === "community"
+                ? document.scrollingElement
+                : findListScroller(surface.root);
+        if (!scroller) throw new Error("Member list scroller not found.");
 
         const targets = new Set();
         const alreadyBlocked = new Set();
@@ -1029,7 +1098,7 @@
                 if (bulk.cancelled) throw new CancelledError();
 
                 const foundBeforeScroll = collectVisibleMembers(
-                    dialog,
+                    surface.root,
                     targets,
                     alreadyBlocked,
                 );
@@ -1048,7 +1117,7 @@
                 await cancellableDelay(SCAN_WAIT_MS);
 
                 const foundAfterScroll = collectVisibleMembers(
-                    dialog,
+                    surface.root,
                     targets,
                     alreadyBlocked,
                 );
@@ -1067,7 +1136,7 @@
                 const now = Date.now();
                 if (!bottomWaitStartedAt) bottomWaitStartedAt = now;
 
-                const loading = listIsLoading(dialog);
+                const loading = listIsLoading(surface.root);
                 const waitMs = now - bottomWaitStartedAt;
                 if (loading) {
                     updatePanel(
@@ -1094,15 +1163,19 @@
     }
 
     async function startBulkBlock() {
-        const dialog = findListDialog();
-        if (!dialog) {
-            showToast("Open an X List members or followers page first.");
+        const surface = findBulkSurface();
+        if (!surface) {
+            showToast(
+                "Open an X List or Community members page first.",
+            );
             return;
         }
+        const confirmation =
+            surface.kind === "community"
+                ? "Block every currently unblocked account on this Community members page?\n\nThis includes admins and moderators. You can stop the run, but completed blocks will remain."
+                : "Block every currently unblocked account in this X List?\n\nYou can stop the run, but completed blocks will remain.";
         if (
-            !pageWindow.confirm(
-                "Block every currently unblocked account in this X List?\n\nYou can stop the run, but completed blocks will remain.",
-            )
+            !pageWindow.confirm(confirmation)
         ) {
             return;
         }
@@ -1116,7 +1189,7 @@
 
         try {
             await waitForAuth(12000, true);
-            const scan = await scanListMembers(dialog);
+            const scan = await scanListMembers(surface);
             bulk.total = scan.targets.length;
 
             if (!bulk.total) {
@@ -1155,6 +1228,7 @@
                                         "Stop",
                                     ),
                             });
+                            recentlyBlockedSuggestionIds.add(userId);
                             bulk.blocked++;
                         } catch (error) {
                             if (error instanceof CancelledError) return;
@@ -1187,7 +1261,10 @@
                 `Done. ${bulk.blocked} blocked · ${bulk.failed} failed · ${scan.alreadyBlocked} already blocked`,
                 "Run again",
             );
-            showToast(`List blocking finished: ${bulk.blocked} blocked`, 5000);
+            showToast(
+                `${surface.kind === "community" ? "Community" : "List"} blocking finished: ${bulk.blocked} blocked`,
+                5000,
+            );
         } catch (error) {
             if (error instanceof CancelledError) {
                 updatePanel(
@@ -1223,7 +1300,7 @@
         )) {
             addSuggestionBlockButton(cell);
         }
-        ensureListPanel();
+        ensureBulkPanel();
     }
 
     function scheduleScan() {
