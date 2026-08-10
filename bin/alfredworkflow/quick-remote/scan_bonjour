@@ -1,0 +1,200 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use utf8;
+
+use File::Path qw(make_path);
+use File::Spec;
+use IO::Select;
+use JSON::PP;
+use Time::HiRes qw(time);
+
+my $cache_dir = shift @ARGV || exit 1;
+make_path($cache_dir) unless -d $cache_dir;
+
+my $cache_file = File::Spec->catfile($cache_dir, 'bonjour.json');
+my $lock_dir   = File::Spec->catdir($cache_dir, '.bonjour-scan.lock');
+
+if (-d $lock_dir) {
+    my $age = time - ((stat $lock_dir)[9] || 0);
+    rmdir $lock_dir if $age > 20;
+}
+exit 0 unless mkdir $lock_dir;
+
+END { rmdir $lock_dir if defined $lock_dir && -d $lock_dir }
+
+my $old = read_json($cache_file) || { devices => [] };
+my $dns_sd = $ENV{QUICK_REMOTE_DNS_SD} || '/usr/bin/dns-sd';
+if (!-x $dns_sd) {
+    write_cache({
+        updated => int(time),
+        devices => ref $old->{devices} eq 'ARRAY' ? $old->{devices} : [],
+        error   => 'dns-sd is unavailable',
+    });
+    exit 0;
+}
+
+my @browse_commands = (
+    [$dns_sd, '-B', '_rfb._tcp', 'local.'],
+    [$dns_sd, '-B', '_vnc._tcp', 'local.'],
+);
+my $browse_output = capture_commands(1.5, @browse_commands);
+
+if (@{$browse_output} && !grep { $_ !~ /DNSServiceBrowse failed/i } @{$browse_output}) {
+    my ($message) = $browse_output->[0] =~ /(DNSServiceBrowse failed[^\r\n]*)/i;
+    write_cache({
+        updated => int(time),
+        devices => ref $old->{devices} eq 'ARRAY' ? $old->{devices} : [],
+        error   => $message || 'Bonjour browsing failed',
+    });
+    exit 0;
+}
+
+my @services;
+my %seen_service;
+for my $output (@{$browse_output}) {
+    while ($output =~ /^\S+\s+Add\s+\S+\s+\S+\s+\S+\s+(_(?:rfb|vnc)\._tcp)\.?\s+(.+?)\s*$/gmi) {
+        my ($type, $name) = ($1, $2);
+        $name =~ s/^\s+|\s+$//g;
+        my $key = lc($type) . "\0" . lc($name);
+        next if $seen_service{$key}++;
+        push @services, { type => $type, name => $name };
+    }
+}
+
+splice @services, 32 if @services > 32;
+
+my @resolve_commands = map {
+    [$dns_sd, '-L', $_->{name}, $_->{type}, 'local.']
+} @services;
+my $resolve_output = @resolve_commands
+    ? capture_commands(1.5, @resolve_commands)
+    : [];
+
+my %old_by_service;
+if (ref $old->{devices} eq 'ARRAY') {
+    for my $device (@{$old->{devices}}) {
+        next unless ref $device eq 'HASH';
+        my $key = lc($device->{service} || '') . "\0" . lc($device->{name} || '');
+        $old_by_service{$key} = $device if $device->{host};
+    }
+}
+
+my @devices;
+my %seen_target;
+for my $index (0 .. $#services) {
+    my $service = $services[$index];
+    my $output  = $resolve_output->[$index] || '';
+    my ($host, $port);
+
+    if ($output =~ /can be reached at\s+(.+):(\d+)\s+/i) {
+        ($host, $port) = ($1, $2);
+        $host =~ s/\.\z//;
+        $host =~ s/^\s+|\s+$//g;
+    }
+
+    if (!$host) {
+        my $key = lc($service->{type}) . "\0" . lc($service->{name});
+        my $previous = $old_by_service{$key};
+        if ($previous) {
+            ($host, $port) = ($previous->{host}, $previous->{port});
+        }
+    }
+    next unless $host && $port;
+
+    my $target = lc($host) . ':' . $port;
+    next if $seen_target{$target}++;
+    my $url_host = $host =~ /:/ && $host !~ /^\[/ ? '[' . $host . ']' : $host;
+    my $url = 'vnc://' . $url_host;
+    $url .= ':' . $port if $port != 5900;
+
+    push @devices, {
+        name    => $service->{name},
+        host    => $host,
+        port    => 0 + $port,
+        service => $service->{type},
+        url     => $url,
+    };
+}
+
+@devices = sort {
+    lc($a->{name}) cmp lc($b->{name}) || lc($a->{host}) cmp lc($b->{host})
+} @devices;
+
+write_cache({
+    updated => int(time),
+    devices => \@devices,
+});
+
+sub start_command {
+    my ($command) = @_;
+    pipe my $reader, my $writer or return;
+    my $pid = fork();
+    return unless defined $pid;
+
+    if ($pid == 0) {
+        close $reader;
+        open STDOUT, '>&', $writer;
+        open STDERR, '>&', $writer;
+        close $writer;
+        exec @{$command};
+        exit 127;
+    }
+
+    close $writer;
+    return { fh => $reader, pid => $pid, output => '' };
+}
+
+sub capture_commands {
+    my ($seconds, @commands) = @_;
+    my @processes = map { start_command($_) } @commands;
+    @processes = grep { defined } @processes;
+    my $selector = IO::Select->new(map { $_->{fh} } @processes);
+    my %by_fileno = map { fileno($_->{fh}) => $_ } @processes;
+    my $deadline = time + $seconds;
+
+    while ($selector->count && time < $deadline) {
+        my $remaining = $deadline - time;
+        my @ready = $selector->can_read($remaining > 0.1 ? 0.1 : $remaining);
+        for my $fh (@ready) {
+            my $buffer = '';
+            my $read = sysread($fh, $buffer, 8192);
+            my $process = $by_fileno{fileno($fh)};
+            if (defined $read && $read > 0) {
+                $process->{output} .= $buffer;
+            } else {
+                $selector->remove($fh);
+                close $fh;
+            }
+        }
+    }
+
+    for my $process (@processes) {
+        kill 'TERM', $process->{pid};
+    }
+    for my $process (@processes) {
+        waitpid $process->{pid}, 0;
+        close $process->{fh} if defined fileno($process->{fh});
+    }
+    return [map { $_->{output} } @processes];
+}
+
+sub read_json {
+    my ($path) = @_;
+    return unless -f $path;
+    open my $fh, '<:raw', $path or return;
+    local $/;
+    my $raw = <$fh>;
+    close $fh;
+    return eval { JSON::PP->new->utf8->decode($raw) };
+}
+
+sub write_cache {
+    my ($data) = @_;
+    my $temporary = $cache_file . '.new.' . $$;
+    open my $fh, '>:raw', $temporary or return;
+    print {$fh} JSON::PP->new->utf8->canonical->encode($data);
+    close $fh;
+    rename $temporary, $cache_file;
+}

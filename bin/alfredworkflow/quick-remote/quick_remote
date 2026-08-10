@@ -1,0 +1,411 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use utf8;
+
+use Cwd qw(abs_path);
+use File::Basename qw(dirname);
+use File::Glob qw(bsd_glob GLOB_NOSORT);
+use File::Path qw(make_path);
+use File::Spec;
+use FindBin;
+use JSON::PP;
+use POSIX qw(setsid _exit);
+use Text::ParseWords qw(shellwords);
+
+binmode STDOUT, ':raw';
+
+my ($mode, $query) = @ARGV;
+$mode  = 'remote' unless defined $mode && $mode =~ /\A(?:remote|ssh|vnc)\z/;
+$query = '' unless defined $query;
+$query =~ s/^\s+|\s+$//g;
+
+my $home = $ENV{HOME} || (getpwuid($<))[7] || '';
+my $ssh_config = $ENV{ssh_config_path} || '~/.ssh/config';
+$ssh_config = expand_home($ssh_config, $home);
+
+my $cache_dir = $ENV{alfred_workflow_cache}
+    || File::Spec->catdir($ENV{TMPDIR} || '/tmp', 'com.gholts.quick-remote');
+make_path($cache_dir) unless -d $cache_dir;
+
+my $cache_file = File::Spec->catfile($cache_dir, 'bonjour.json');
+my $lock_dir   = File::Spec->catdir($cache_dir, '.bonjour-scan.lock');
+my $cache      = read_json($cache_file) || { updated => 0, devices => [] };
+
+my @items;
+my $scanning = 0;
+
+if ($mode eq 'remote' || $mode eq 'ssh') {
+    my ($hosts, $config_exists) = read_ssh_hosts($ssh_config, $home);
+
+    for my $host (@{$hosts}) {
+        my $alias = $host->{alias};
+        my $destination = $host->{hostname} || $alias;
+        $destination = $host->{user} . '@' . $destination if $host->{user};
+        $destination .= ':' . $host->{port}
+            if $host->{port} && $host->{port} ne '22';
+
+        my $search = join ' ', grep { defined && length } (
+            $alias, $destination, $host->{hostname}, $host->{user}, $host->{port}, 'ssh'
+        );
+        next unless matches_query($search, $query);
+
+        push @items, {
+            uid       => 'ssh:' . $alias,
+            title     => $alias,
+            subtitle  => 'SSH  •  ' . $destination,
+            match     => $search,
+            arg       => shell_quote($alias),
+            variables => { remote_type => 'ssh' },
+            mods      => {
+                cmd => {
+                    arg       => shell_quote('oil-ssh://' . $alias . '/'),
+                    subtitle  => 'Open with Neovim Oil over SSH  •  Requires nvim + oil.nvim',
+                    variables => { remote_type => 'oil' },
+                },
+            },
+        };
+    }
+
+    if (!$config_exists && $mode eq 'ssh' && !@items) {
+        push @items, status_item(
+            'SSH config not found',
+            $ssh_config,
+        );
+    } elsif ($config_exists && !@{$hosts} && $mode eq 'ssh' && !@items) {
+        push @items, status_item(
+            'No literal SSH hosts found',
+            'Wildcard-only Host entries are not selectable destinations.',
+        );
+    }
+}
+
+if ($mode eq 'remote' || $mode eq 'vnc') {
+    my $vnc_result_count = 0;
+    my @vnc_items = configured_vnc_items($ENV{manual_vnc_addresses} || '');
+    my %manual_targets = map { ($_->{target_key} => 1) } @vnc_items;
+
+    if (ref $cache->{devices} eq 'ARRAY') {
+        for my $device (@{$cache->{devices}}) {
+            next unless ref $device eq 'HASH';
+            my $url  = $device->{url}  || next;
+            my $name = $device->{name} || $device->{host} || $url;
+            my $key  = target_key($url);
+            next if $key && $manual_targets{$key};
+
+            push @vnc_items, {
+                title      => $name,
+                subtitle   => 'VNC  •  Bonjour  •  ' . mask_vnc_url($url),
+                url        => $url,
+                target_key => $key,
+                source     => 'bonjour',
+            };
+        }
+    }
+
+    my %seen_urls;
+    for my $vnc (@vnc_items) {
+        next if $seen_urls{lc $vnc->{url}}++;
+        my $search = join ' ', $vnc->{title}, mask_vnc_url($vnc->{url}), 'vnc', $vnc->{source};
+        next unless matches_query($search, $query);
+
+        push @items, {
+            uid       => 'vnc:' . $vnc->{source} . ':' . ($vnc->{target_key} || $vnc->{url}),
+            title     => $vnc->{title},
+            subtitle  => $vnc->{subtitle},
+            match     => $search,
+            arg       => $vnc->{url},
+            variables => { remote_type => 'vnc' },
+        };
+        $vnc_result_count++;
+    }
+
+    if ($mode eq 'vnc' && is_direct_vnc_query($query)) {
+        my $url = normalise_vnc_url($query);
+        my $info = vnc_url_info($url);
+        if ($info) {
+            unshift @items, {
+                uid       => 'vnc:direct:' . $info->{target_key},
+                title     => 'Connect to ' . $info->{host},
+                subtitle  => 'VNC  •  Typed address  •  ' . mask_vnc_url($url),
+                match     => join(' ', $info->{host}, mask_vnc_url($url), 'vnc'),
+                arg       => $url,
+                variables => { remote_type => 'vnc' },
+            };
+            $vnc_result_count++;
+        }
+    }
+
+    if ($cache->{error}) {
+        push @items, status_item('Bonjour scan failed', $cache->{error});
+    }
+
+    if ($mode eq 'remote') {
+        my $updated = ($cache->{updated} || 0) + 0;
+        my $stale = time - $updated > 10;
+        if ($stale || -d $lock_dir) {
+            start_scanner($cache_dir) if $stale && !-d $lock_dir;
+            $scanning = 1;
+            push @items, status_item(
+                'Refreshing Bonjour VNC devices…',
+                'Cached devices remain available during scan.',
+            );
+        }
+    }
+
+    if ($mode eq 'vnc' && !$vnc_result_count && !$cache->{error}) {
+        push @items, status_item(
+            'No cached VNC devices',
+            'Use “remote” to scan Bonjour, type an address, or configure saved VNC URLs.',
+        );
+    }
+}
+
+my %output = (items => \@items);
+$output{rerun} = 0.5 if $scanning;
+
+print JSON::PP->new->utf8->canonical->encode(\%output);
+
+sub expand_home {
+    my ($path, $user_home) = @_;
+    $path =~ s/^~(?=\/|$)/$user_home/;
+    return $path;
+}
+
+sub read_json {
+    my ($path) = @_;
+    return unless -f $path;
+    open my $fh, '<:raw', $path or return;
+    local $/;
+    my $raw = <$fh>;
+    close $fh;
+    return eval { JSON::PP->new->utf8->decode($raw) };
+}
+
+sub strip_comment {
+    my ($line) = @_;
+    my $quote = '';
+    my $escaped = 0;
+    my $out = '';
+
+    for my $char (split //, $line) {
+        if ($escaped) {
+            $out .= $char;
+            $escaped = 0;
+            next;
+        }
+        if ($char eq '\\' && $quote ne "'") {
+            $out .= $char;
+            $escaped = 1;
+            next;
+        }
+        if ($char eq "'" && $quote ne '"') {
+            $quote = $quote eq "'" ? '' : "'";
+            $out .= $char;
+            next;
+        }
+        if ($char eq '"' && $quote ne "'") {
+            $quote = $quote eq '"' ? '' : '"';
+            $out .= $char;
+            next;
+        }
+        last if $char eq '#' && !$quote && ($out eq '' || $out =~ /\s\z/);
+        $out .= $char;
+    }
+    return $out;
+}
+
+sub parse_words {
+    my ($line) = @_;
+    $line = strip_comment($line);
+    $line =~ s/^\s*([A-Za-z][A-Za-z0-9-]*)\s*=\s*/$1 /;
+    my @words = eval { shellwords($line) };
+    return @words;
+}
+
+sub expand_include_pattern {
+    my ($pattern, $including_file, $user_home) = @_;
+    $pattern =~ s/%d/$user_home/g;
+    $pattern = expand_home($pattern, $user_home);
+    if (!File::Spec->file_name_is_absolute($pattern)) {
+        $pattern = File::Spec->catfile(dirname($including_file), $pattern);
+    }
+    return $pattern;
+}
+
+sub read_ssh_hosts {
+    my ($root, $user_home) = @_;
+    my %records;
+    my @order;
+    my %seen_files;
+    my $state = { current => [] };
+
+    my $parse_file;
+    $parse_file = sub {
+        my ($path) = @_;
+        my $canonical = abs_path($path) || File::Spec->rel2abs($path);
+        return if $seen_files{$canonical}++;
+        open my $fh, '<:encoding(UTF-8)', $path or return;
+
+        while (my $line = <$fh>) {
+            $line =~ s/\r?\n\z//;
+            my @words = parse_words($line);
+            next unless @words;
+            my $key = lc shift @words;
+
+            if ($key eq 'include') {
+                for my $pattern (@words) {
+                    my $expanded = expand_include_pattern($pattern, $path, $user_home);
+                    my @matches = bsd_glob($expanded, GLOB_NOSORT);
+                    @matches = ($expanded) if !@matches && -f $expanded;
+                    $parse_file->($_) for grep { -f $_ } @matches;
+                }
+                next;
+            }
+
+            if ($key eq 'host') {
+                my @literal = grep {
+                    length($_) && $_ !~ /^!/ && $_ !~ /[*?\[]/
+                } @words;
+                $state->{current} = \@literal;
+                for my $alias (@literal) {
+                    if (!exists $records{$alias}) {
+                        $records{$alias} = { alias => $alias };
+                        push @order, $alias;
+                    }
+                }
+                next;
+            }
+
+            if ($key eq 'match') {
+                $state->{current} = [];
+                next;
+            }
+
+            next unless @{$state->{current}} && @words;
+            next unless $key eq 'hostname' || $key eq 'user' || $key eq 'port';
+            for my $alias (@{$state->{current}}) {
+                $records{$alias}{$key} = $words[0]
+                    unless defined $records{$alias}{$key};
+            }
+        }
+        close $fh;
+    };
+
+    my $exists = -f $root ? 1 : 0;
+    $parse_file->($root) if $exists;
+    return ([map { $records{$_} } @order], $exists);
+}
+
+sub shell_quote {
+    my ($value) = @_;
+    $value =~ s/'/'\\''/g;
+    return q{'} . $value . q{'};
+}
+
+sub matches_query {
+    my ($haystack, $needle) = @_;
+    return 1 unless length $needle;
+    my $lower = lc $haystack;
+    for my $part (grep { length } split /\s+/, lc $needle) {
+        return 0 if index($lower, $part) < 0;
+    }
+    return 1;
+}
+
+sub normalise_vnc_url {
+    my ($value) = @_;
+    $value =~ s/^\s+|\s+$//g;
+    return $value if $value =~ /^vnc:\/\//i;
+    return 'vnc://' . $value;
+}
+
+sub vnc_url_info {
+    my ($url) = @_;
+    return unless defined $url && $url =~ /^vnc:\/\/([^\s\/?#]+)(?:[\/?#].*)?\z/i;
+    my $authority = $1;
+    my $hostport = $authority;
+    $hostport =~ s/^.*\@//;
+
+    my ($host, $port);
+    if ($hostport =~ /^\[([^\]]+)\](?::(\d+))?\z/) {
+        ($host, $port) = ($1, $2);
+    } elsif ($hostport =~ /^([^:]+)(?::(\d+))?\z/) {
+        ($host, $port) = ($1, $2);
+    } else {
+        return;
+    }
+    return unless length $host;
+    $port ||= 5900;
+    return {
+        host       => $host,
+        port       => $port,
+        target_key => lc($host) . ':' . $port,
+    };
+}
+
+sub target_key {
+    my ($url) = @_;
+    my $info = vnc_url_info($url);
+    return $info ? $info->{target_key} : '';
+}
+
+sub mask_vnc_url {
+    my ($url) = @_;
+    my $masked = $url;
+    $masked =~ s{^(vnc://[^/@:]+):[^@]*\@}{$1:••••\@}i;
+    return $masked;
+}
+
+sub configured_vnc_items {
+    my ($configured) = @_;
+    my @result;
+    for my $line (split /\r?\n/, $configured) {
+        $line =~ s/^\s+|\s+$//g;
+        next unless length $line;
+        my $url = normalise_vnc_url($line);
+        my $info = vnc_url_info($url) || next;
+        push @result, {
+            title      => $info->{host},
+            subtitle   => 'VNC  •  Saved  •  ' . mask_vnc_url($url),
+            url        => $url,
+            target_key => $info->{target_key},
+            source     => 'saved',
+        };
+    }
+    return @result;
+}
+
+sub is_direct_vnc_query {
+    my ($value) = @_;
+    return 0 unless length $value;
+    return 1 if $value =~ /^vnc:\/\//i;
+    return 1 if $value =~ /[.@:\[\]]/;
+    return 0;
+}
+
+sub status_item {
+    my ($title, $subtitle) = @_;
+    return {
+        title    => $title,
+        subtitle => $subtitle,
+        valid    => JSON::PP::false,
+    };
+}
+
+sub start_scanner {
+    my ($directory) = @_;
+    my $scanner = File::Spec->catfile($FindBin::Bin, 'scan_bonjour');
+    return unless -x $scanner;
+
+    my $pid = fork();
+    return unless defined $pid;
+    if ($pid == 0) {
+        open STDIN,  '<', '/dev/null';
+        open STDOUT, '>', '/dev/null';
+        open STDERR, '>', '/dev/null';
+        eval { setsid() };
+        exec($scanner, $directory) or _exit(127);
+    }
+}
