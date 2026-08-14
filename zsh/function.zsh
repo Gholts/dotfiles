@@ -30,9 +30,9 @@ nvim() {
     command nvim "$@"
 }
 #----------------------------------------------------------packages
-alias remove="brew uninstall --cask --force --zap"
 alias server="bunx serve"
-alias tailscale="/Applications/Tailscale.app/Contents/MacOS/Tailscale"
+alias remove="brew uninstall --cask --force --zap"
+alias surge-cli="/Applications/Surge.app/Contents/Applications/surge-cli"
 #---------------------------------------------------------xdg_alias
 alias adb="HOME=$XDG_DATA_HOME/android adb"
 alias wget="wget --hsts-file=$XDG_DATA_HOME/wget-hsts"
