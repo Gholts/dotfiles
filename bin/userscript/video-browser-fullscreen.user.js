@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Video Browser Fullscreen Kit
 // @namespace    gholts.video-browser-fullscreen.kit
-// @version      2026.07.30.2
+// @version      2026.08.14
 // @description  Keep macOS video fullscreen inside the browser window and preserve rapid play/pause clicks.
 // @author       Gholts
 // @license      GNU Affero General Public License v3.0
@@ -9,7 +9,7 @@
 // @match        https://*/*
 // @grant        none
 // @run-at       document-start
-// @inject-into  page
+// @inject-into  auto
 // ==/UserScript==
 
 (() => {
