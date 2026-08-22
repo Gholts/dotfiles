@@ -1,0 +1,45 @@
+#!/bin/zsh
+
+set -u
+
+workflow_dir=${0:A:h}
+keyword=${alfred_workflow_keyword:-}
+query=${1:-}
+selector=${selector_keyword:-browser}
+cache_dir=${alfred_workflow_cache:-${TMPDIR:-/tmp}/com.gholts.browser-selector}
+manifest=$cache_dir/browsers.tsv
+selector_mode=0
+[[ ${keyword:l} == ${selector:l} ]] && selector_mode=1
+
+if [[ ! -s $manifest || ( $selector_mode == 1 && -z $query ) ]]; then
+  /bin/mkdir -p "$cache_dir"
+  detected=$cache_dir/browsers.new.tsv
+  if "$workflow_dir/detect-browsers" > "$detected" && [[ -s $detected ]]; then
+    /bin/mv -f "$detected" "$manifest"
+  else
+    /bin/rm -f "$detected"
+  fi
+fi
+
+if [[ $selector_mode == 1 && -s $manifest ]]; then
+  "$workflow_dir/configure-keywords" "$manifest" "$workflow_dir/info.plist" >/dev/null 2>&1 || true
+fi
+
+args=("$query")
+if [[ -r $manifest ]]; then
+  if [[ $selector_mode == 1 ]]; then
+    while IFS=$'\t' read -r name app_path variable_name; do
+      args+=("$name" "$app_path")
+    done < "$manifest"
+  else
+    while IFS=$'\t' read -r name app_path variable_name; do
+      configured_keyword=${(P)variable_name:-$name}
+      if [[ ${configured_keyword:l} == ${keyword:l} ]]; then
+        args+=("$name" "$app_path")
+        break
+      fi
+    done < "$manifest"
+  fi
+fi
+
+exec /usr/bin/osascript -l JavaScript "$workflow_dir/render.js" "${args[@]}"

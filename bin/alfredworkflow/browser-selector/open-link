@@ -1,0 +1,8 @@
+#!/bin/zsh
+
+set -u
+
+link=${1:-}
+[[ -n ${browser_path:-} && -d $browser_path && -n $link ]] || exit 1
+
+exec /usr/bin/open -a "$browser_path" "$link"

@@ -1,0 +1,25 @@
+#!/bin/zsh
+
+set -euo pipefail
+
+workflow_dir=${0:A:h}
+output=${1:-/tmp/Browser Selector.alfredworkflow}
+build_dir=$(/usr/bin/mktemp -d "${TMPDIR:-/tmp}/browser-selector.XXXXXX")
+trap '/bin/rm -rf -- "$build_dir"' EXIT
+stage=$build_dir/workflow
+
+/bin/mkdir "$stage"
+/usr/bin/ditto "$workflow_dir/" "$stage/"
+/bin/rm -f "$stage/browsers.tsv"
+/usr/bin/touch "$build_dir/empty.tsv"
+alfred_workflow_bundleid= FORCE_CONFIGURE=1 "$stage/configure-keywords" "$build_dir/empty.tsv" "$stage/info.plist"
+
+/bin/mkdir -p "${output:h}"
+archive=$build_dir/browser-selector.alfredworkflow
+(
+  cd "$stage"
+  /usr/bin/zip -q -r "$archive" . -x '*.DS_Store' -x '*.alfredworkflow'
+)
+/bin/mv -f "$archive" "$output"
+
+print -r -- "Portable workflow: $output"

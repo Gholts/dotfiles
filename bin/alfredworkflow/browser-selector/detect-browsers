@@ -1,0 +1,39 @@
+#!/bin/zsh
+
+set -euo pipefail
+
+database=${ALFRED_FILECACHE:-$HOME/Library/Application Support/Alfred/Databases/filecache.alfdb}
+[[ -r $database ]] || exit 1
+
+typeset -A seen_names used_variables
+used_variables[selector_keyword]=1
+while IFS=$'\t' read -r filename app_path; do
+  browser_name=${filename%.app}
+  name_key=${browser_name:l}
+  [[ -z ${seen_names[$name_key]-} ]] || continue
+
+  plist=$app_path/Contents/Info.plist
+  [[ -r $plist ]] || continue
+  url_types=$(/usr/bin/plutil -extract CFBundleURLTypes xml1 -o - "$plist" 2>/dev/null) || continue
+  [[ $url_types == *'<string>http</string>'* && $url_types == *'<string>https</string>'* ]] || continue
+  document_types=$(/usr/bin/plutil -extract CFBundleDocumentTypes xml1 -o - "$plist" 2>/dev/null) || continue
+  [[ $document_types == *'<string>public.html</string>'* ||
+     $document_types == *'<string>public.xhtml</string>'* ||
+     $document_types == *'<string>text/html</string>'* ||
+     $document_types == *'<string>html</string>'* ||
+     $document_types == *'<string>htm</string>'* ]] || continue
+
+  slug=$(print -r -- "$browser_name" | /usr/bin/tr '[:upper:]' '[:lower:]' | /usr/bin/sed -E 's/[^a-z0-9]+/_/g; s/^_+//; s/_+$//')
+  [[ -n $slug ]] || slug=browser
+  variable_name=${slug}_keyword
+  suffix=2
+  while [[ -n ${used_variables[$variable_name]-} ]]; do
+    variable_name=${slug}_${suffix}_keyword
+    (( suffix++ ))
+  done
+
+  seen_names[$name_key]=1
+  used_variables[$variable_name]=1
+  print -r -- "$browser_name"$'\t'"$app_path"$'\t'"$variable_name"
+done < <(/usr/bin/sqlite3 -separator $'\t' "$database" \
+  "SELECT fileName, path FROM files WHERE filetype = 1 AND fileName LIKE '%.app' ORDER BY fileName COLLATE NOCASE, path")

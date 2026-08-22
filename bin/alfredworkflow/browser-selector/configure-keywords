@@ -1,0 +1,49 @@
+#!/bin/zsh
+
+set -euo pipefail
+
+manifest=$1
+info=${2:-${0:A:h}/info.plist}
+info_mode=$(/usr/bin/stat -f '%Lp' "$info")
+keywords=$(/usr/bin/awk -F '\t' 'BEGIN { printf "{var:selector_keyword}" } { printf "||{var:%s}", $3 }' "$manifest")
+current=$(/usr/bin/plutil -extract objects.0.config.keyword raw "$info" 2>/dev/null || true)
+[[ ${FORCE_CONFIGURE:-0} == 1 || $current != $keywords ]] || exit 0
+
+temporary=$(/usr/bin/mktemp "$info.XXXXXX")
+trap '/bin/rm -f -- "$temporary"' EXIT
+/bin/cp "$info" "$temporary"
+/usr/bin/plutil -replace objects.0.config.keyword -string "$keywords" "$temporary"
+/usr/bin/plutil -replace variables -json '{"selector_keyword":"browser"}' "$temporary"
+/usr/bin/plutil -remove userconfigurationconfig "$temporary" >/dev/null 2>&1 || true
+/usr/bin/plutil -insert userconfigurationconfig -json '[]' "$temporary"
+
+add_configuration() {
+  local index=$1 variable=$2 default=$3 label=$4 description=$5
+  /usr/bin/plutil -insert "userconfigurationconfig.$index" -json '{}' "$temporary"
+  /usr/bin/plutil -insert "userconfigurationconfig.$index.config" -json '{}' "$temporary"
+  /usr/bin/plutil -insert "userconfigurationconfig.$index.config.default" -string "$default" "$temporary"
+  /usr/bin/plutil -insert "userconfigurationconfig.$index.config.placeholder" -string "$default" "$temporary"
+  /usr/bin/plutil -insert "userconfigurationconfig.$index.config.required" -integer 1 "$temporary"
+  /usr/bin/plutil -insert "userconfigurationconfig.$index.config.trim" -integer 1 "$temporary"
+  /usr/bin/plutil -insert "userconfigurationconfig.$index.description" -string "$description" "$temporary"
+  /usr/bin/plutil -insert "userconfigurationconfig.$index.label" -string "$label" "$temporary"
+  /usr/bin/plutil -insert "userconfigurationconfig.$index.type" -string textfield "$temporary"
+  /usr/bin/plutil -insert "userconfigurationconfig.$index.variable" -string "$variable" "$temporary"
+}
+
+add_configuration 0 selector_keyword browser "Selector Keyword" "Portable selector and browser refresh keyword."
+configuration_index=1
+while IFS=$'\t' read -r browser_name app_path variable_name; do
+  /usr/bin/plutil -insert "variables.$variable_name" -string "$browser_name" "$temporary"
+  add_configuration "$configuration_index" "$variable_name" "$browser_name" "$browser_name Keyword" "Keyword used to open links in $browser_name."
+  (( ++configuration_index ))
+done < "$manifest"
+
+/usr/bin/plutil -lint "$temporary" >/dev/null
+/bin/chmod "$info_mode" "$temporary"
+/bin/mv -f "$temporary" "$info"
+trap - EXIT
+
+if [[ -n ${alfred_workflow_bundleid:-} ]]; then
+  /usr/bin/osascript -e 'tell application id "com.runningwithcrayons.Alfred" to reload workflow "com.gholts.browser-selector"' >/dev/null 2>&1 || true
+fi
