@@ -23,7 +23,7 @@
 	<key>createdby</key>
 	<string>Gholts</string>
 	<key>description</key>
-	<string>Open links in browsers detected from each user's Alfred results.</string>
+	<string>Open URLs and Alfred web searches in browsers detected from each user's Alfred results.</string>
 	<key>disabled</key>
 	<false/>
 	<key>name</key>
@@ -66,7 +66,7 @@
 				<key>skipuniversalaction</key>
 				<true/>
 				<key>subtext</key>
-				<string>Type or paste a link, then choose browser</string>
+				<string>Type a URL, search, or Alfred web-search keyword</string>
 				<key>title</key>
 				<string>Browser Selector</string>
 				<key>type</key>
@@ -115,7 +115,15 @@ First use detects browsers from this Mac's Alfred results and installs their nam
 Safari example.com
 Firefox example.com
 
-Run browser with no link after installing or removing browsers to refresh. Customize selector and browser keywords in Workflow Configuration.</string>
+Plain text searches Google in that browser:
+Safari macOS Tahoe
+
+Prefix text with any enabled Alfred Web Search keyword:
+Safari yt macOS Tahoe
+
+Renamed and custom Alfred Web Search keywords work automatically. Disabled searches stay disabled.
+
+Run browser with no query after installing or removing browsers to refresh. Customize selector and browser keywords in Workflow Configuration.</string>
 	<key>uidata</key>
 	<dict>
 		<key>15A24317-97BE-4388-B47C-D7B7334ED354</key>
@@ -165,7 +173,7 @@ Run browser with no link after installing or removing browsers to refresh. Custo
 	<key>variablesdontexport</key>
 	<array/>
 	<key>version</key>
-	<string>2.0.0</string>
+	<string>2.1.0</string>
 	<key>webaddress</key>
 	<string></string>
 </dict>

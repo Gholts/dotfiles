@@ -35,7 +35,7 @@ add_configuration 0 selector_keyword browser "Selector Keyword" "Portable select
 configuration_index=1
 while IFS=$'\t' read -r browser_name app_path variable_name; do
   /usr/bin/plutil -insert "variables.$variable_name" -string "$browser_name" "$temporary"
-  add_configuration "$configuration_index" "$variable_name" "$browser_name" "$browser_name Keyword" "Keyword used to open links in $browser_name."
+  add_configuration "$configuration_index" "$variable_name" "$browser_name" "$browser_name Keyword" "Keyword used to open URLs and searches in $browser_name."
   (( ++configuration_index ))
 done < "$manifest"
 

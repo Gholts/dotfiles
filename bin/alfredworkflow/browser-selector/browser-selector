@@ -8,6 +8,8 @@ query=${1:-}
 selector=${selector_keyword:-browser}
 cache_dir=${alfred_workflow_cache:-${TMPDIR:-/tmp}/com.gholts.browser-selector}
 manifest=$cache_dir/browsers.tsv
+preferences=${alfred_preferences:-$HOME/Library/Application Support/Alfred/Alfred.alfredpreferences}
+websearch=$preferences/preferences/features/websearch
 selector_mode=0
 [[ ${keyword:l} == ${selector:l} ]] && selector_mode=1
 
@@ -25,7 +27,7 @@ if [[ $selector_mode == 1 && -s $manifest ]]; then
   "$workflow_dir/configure-keywords" "$manifest" "$workflow_dir/info.plist" >/dev/null 2>&1 || true
 fi
 
-args=("$query")
+args=("$query" "$websearch")
 if [[ -r $manifest ]]; then
   if [[ $selector_mode == 1 ]]; then
     while IFS=$'\t' read -r name app_path variable_name; do
