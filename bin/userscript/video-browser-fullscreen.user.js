@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Video Browser Fullscreen Kit
 // @namespace    gholts.video-browser-fullscreen.kit
-// @version      2026.08.14
+// @version      2026.08.24
 // @description  Keep macOS video fullscreen inside the browser window and preserve rapid play/pause clicks.
 // @author       Gholts
 // @license      GNU Affero General Public License v3.0
@@ -30,6 +30,10 @@
     const STYLE_ATTR = "data-video-browser-fullscreen-style";
     const FRAME_MESSAGE_KEY = "__videoBrowserFullscreenFrameMessage";
     const MAX_Z_INDEX = "2147483647";
+    const pageWindow =
+        typeof exportFunction === "function" && window.wrappedJSObject
+            ? window.wrappedJSObject
+            : null;
     const FRAME_VIDEO_HINT_PATTERN =
         /(?:^|[./?&=_-])(?:media|player|twitch|video|vimeo|youtube)(?=$|[./?&=_-])/i;
     const PLAYER_HINT_PATTERN =
@@ -1176,14 +1180,16 @@
         } catch {}
     }
 
-    function patchMethod(prototype, name, makeWrapper) {
+    function patchMethod(prototype, name, makeWrapper, targetScope = null) {
         if (!prototype) return;
 
         const descriptor = Object.getOwnPropertyDescriptor(prototype, name);
         if (!descriptor || typeof descriptor.value !== "function") return;
 
         const original = descriptor.value;
-        const wrapper = makeWrapper(original);
+        const wrapper = targetScope
+            ? exportFunction(makeWrapper(original), targetScope)
+            : makeWrapper(original);
         copyFunctionShape(wrapper, original);
 
         try {
@@ -1211,7 +1217,12 @@
         return null;
     }
 
-    function patchFullscreenGetter(prototype, name, recordNative = false) {
+    function patchFullscreenGetter(
+        prototype,
+        name,
+        recordNative = false,
+        targetScope = null,
+    ) {
         if (!prototype) return;
 
         const descriptor = Object.getOwnPropertyDescriptor(prototype, name);
@@ -1220,23 +1231,25 @@
         const originalGet = descriptor.get;
         if (recordNative) nativeFullscreenGetters.push(originalGet);
 
+        const get = function () {
+            const nativeValue = originalGet.call(this);
+            if (nativeValue) return nativeValue;
+            if (this === document) {
+                return virtualFullscreenElementFor(document);
+            }
+            if (
+                typeof ShadowRoot === "function" &&
+                this instanceof ShadowRoot
+            ) {
+                return virtualFullscreenElementFor(this);
+            }
+            return null;
+        };
+
         try {
             Object.defineProperty(prototype, name, {
                 ...descriptor,
-                get() {
-                    const nativeValue = originalGet.call(this);
-                    if (nativeValue) return nativeValue;
-                    if (this === document) {
-                        return virtualFullscreenElementFor(document);
-                    }
-                    if (
-                        typeof ShadowRoot === "function" &&
-                        this instanceof ShadowRoot
-                    ) {
-                        return virtualFullscreenElementFor(this);
-                    }
-                    return null;
-                },
+                get: targetScope ? exportFunction(get, targetScope) : get,
             });
         } catch {}
     }
@@ -1306,7 +1319,11 @@
         }
     }
 
-    function installFullscreenRequestPatch(prototype, name) {
+    function installFullscreenRequestPatch(
+        prototype,
+        name,
+        targetScope = null,
+    ) {
         patchMethod(
             prototype,
             name,
@@ -1316,25 +1333,30 @@
                         return original.apply(this, arguments);
                     }
                     if (!consumeFullscreenPermission()) {
-                        return Promise.reject(
-                            new TypeError(
+                        return window.Promise.reject(
+                            new window.TypeError(
                                 "Fullscreen requires permission and user activation.",
                             ),
                         );
                     }
                     if (enterViewportFullscreen(this)) {
-                        return Promise.resolve();
+                        return window.Promise.resolve();
                     }
-                    return Promise.reject(
-                        new TypeError(
+                    return window.Promise.reject(
+                        new window.TypeError(
                             "Fullscreen target is not connected.",
                         ),
                     );
                 },
+            targetScope,
         );
     }
 
-    function installFullscreenExitPatch(prototype, name) {
+    function installFullscreenExitPatch(
+        prototype,
+        name,
+        targetScope = null,
+    ) {
         patchMethod(
             prototype,
             name,
@@ -1342,10 +1364,11 @@
                 function () {
                     if (active && this === document) {
                         exitViewportFullscreen();
-                        return Promise.resolve();
+                        return window.Promise.resolve();
                     }
                     return original.apply(this, arguments);
                 },
+            targetScope,
         );
     }
 
@@ -1388,13 +1411,13 @@
     }
 
     function convertNativeFullscreen() {
-        if (convertingNativeFullscreen) return;
+        if (convertingNativeFullscreen) return false;
 
         const target = nativeFullscreenElement();
-        if (!target || !isVideoRelated(target)) return;
+        if (!target || !isVideoRelated(target)) return false;
 
         const exitPromise = exitNativeDocumentFullscreen();
-        if (!exitPromise) return;
+        if (!exitPromise) return false;
 
         convertingNativeFullscreen = true;
         exitPromise
@@ -1410,6 +1433,14 @@
             .finally(() => {
                 convertingNativeFullscreen = false;
             });
+        return true;
+    }
+
+    function handleNativeFullscreenChange(event) {
+        if (!event.isTrusted) return;
+        if (convertingNativeFullscreen || convertNativeFullscreen()) {
+            event.stopImmediatePropagation();
+        }
     }
 
     const nativeDocumentExitFullscreen = Document.prototype.exitFullscreen;
@@ -1436,6 +1467,31 @@
         "fullscreenElement",
     );
     patchFullscreenBooleanGetter(Document.prototype, "webkitIsFullScreen");
+
+    if (pageWindow) {
+        installFullscreenRequestPatch(
+            pageWindow.Element?.prototype,
+            "requestFullscreen",
+            pageWindow,
+        );
+        installFullscreenExitPatch(
+            pageWindow.Document?.prototype,
+            "exitFullscreen",
+            pageWindow,
+        );
+        patchFullscreenGetter(
+            pageWindow.Document?.prototype,
+            "fullscreenElement",
+            false,
+            pageWindow,
+        );
+        patchFullscreenGetter(
+            pageWindow.ShadowRoot?.prototype,
+            "fullscreenElement",
+            false,
+            pageWindow,
+        );
+    }
 
     const videoPrototype =
         typeof HTMLVideoElement === "function"
@@ -1619,16 +1675,12 @@
 
     document.addEventListener(
         "fullscreenchange",
-        (event) => {
-            if (event.isTrusted) convertNativeFullscreen();
-        },
+        handleNativeFullscreenChange,
         true,
     );
     document.addEventListener(
         "webkitfullscreenchange",
-        (event) => {
-            if (event.isTrusted) convertNativeFullscreen();
-        },
+        handleNativeFullscreenChange,
         true,
     );
 })();
