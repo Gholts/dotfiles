@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Video Browser Fullscreen Kit
 // @namespace    gholts.video-browser-fullscreen.kit
-// @version      2026.08.24
+// @version      2026.08.25
 // @description  Keep macOS video fullscreen inside the browser window and preserve rapid play/pause clicks.
 // @author       Gholts
 // @license      GNU Affero General Public License v3.0
@@ -687,6 +687,85 @@
         return false;
     }
 
+    function focusedElement() {
+        let element = document.activeElement;
+
+        while (element) {
+            const root = shadowRootOf(element);
+            if (!root?.activeElement) break;
+            element = root.activeElement;
+        }
+        return element;
+    }
+
+    function captureScrollPositions(target) {
+        const positions = [[window, window.scrollX, window.scrollY]];
+        let element = target;
+
+        while (element) {
+            if (
+                element !== document.scrollingElement &&
+                (element.scrollHeight > element.clientHeight ||
+                    element.scrollWidth > element.clientWidth)
+            ) {
+                positions.push([
+                    element,
+                    element.scrollLeft,
+                    element.scrollTop,
+                ]);
+            }
+            element =
+                element.assignedSlot ||
+                element.parentElement ||
+                element.getRootNode?.().host ||
+                null;
+        }
+        return positions;
+    }
+
+    function restoreScrollPositions(positions) {
+        for (const [element, left, top] of positions) {
+            try {
+                if (element === window) {
+                    window.scrollTo({ behavior: "instant", left, top });
+                } else if (element.isConnected) {
+                    element.scrollLeft = left;
+                    element.scrollTop = top;
+                }
+            } catch {}
+        }
+    }
+
+    function focusFullscreenPlayer(state) {
+        if (active !== state) return;
+
+        let focusTarget = null;
+        visitVideos(state.target, (video) => {
+            focusTarget = video;
+            return !video.paused;
+        });
+        if (!focusTarget) {
+            visitElements(state.target, (element) => {
+                if (!frameLooksVideoRelated(element)) return false;
+                focusTarget = element;
+                return true;
+            });
+        }
+        try {
+            (focusTarget || state.target).focus({
+                preventScroll: true,
+            });
+        } catch {}
+    }
+
+    function restoreFullscreenFocus(state) {
+        try {
+            state.focusBefore?.focus?.({
+                preventScroll: true,
+            });
+        } catch {}
+    }
+
     function decorateFullscreenVideo(state, video) {
         if (
             !isVideo(video) ||
@@ -1048,6 +1127,8 @@
         if (active) exitViewportFullscreen();
 
         const root = target.getRootNode?.() || document;
+        const focusBefore = focusedElement();
+        const scrollPositions = captureScrollPositions(target);
         ensureStyles(document);
         if (root !== document) ensureStyles(root);
 
@@ -1092,8 +1173,10 @@
             targetStyles,
             videoAttributes: new Map(),
             childWindow: frameLink?.childWindow || null,
+            focusBefore,
             frameLoadListener: null,
             popoverToggleListener: null,
+            scrollPositions,
             frameRequestId:
                 frameLink?.frameRequestId ||
                 (hasParentFrame() ? createFrameRequestId() : null),
@@ -1106,7 +1189,9 @@
         propagateFrameEnter(state);
 
         queueMicrotask(() => {
-            if (active?.target === target) dispatchFullscreenChange(target);
+            if (active !== state) return;
+            dispatchFullscreenChange(target);
+            focusFullscreenPlayer(state);
         });
         return true;
     }
@@ -1159,7 +1244,16 @@
             postFrameMessage(window.parent, "exit-up", state.frameRequestId);
         }
 
-        queueMicrotask(() => dispatchFullscreenChange(state.target));
+        queueMicrotask(() => {
+            dispatchFullscreenChange(state.target);
+            if (active) return;
+
+            restoreFullscreenFocus(state);
+            restoreScrollPositions(state.scrollPositions);
+            requestAnimationFrame(() => {
+                if (!active) restoreScrollPositions(state.scrollPositions);
+            });
+        });
         return true;
     }
 
