@@ -63,6 +63,8 @@ zstyle ':fzf-tab:*' prefix ''                                               # Re
 zstyle ':fzf-tab:*' switch-group ',' '.'                                    # Use comma/dot to switch between groups
 zstyle ':fzf-tab:complete:*:*' fzf-preview \
     '$XDG_CONFIG_HOME/bin/fzf/fzf-tab-preview "$realpath" "$word" "$group" "$desc"' # Universal preview script
+#-------------------------------------------expand_alias_completion
+zstyle ':completion:*' completer _expand_alias _complete _ignored
 #------------------------------------------macos_process_completion
 zstyle ':completion:*:*:*:*:processes' command 'ps -u "$USER" -o pid,user,command -w' # Use macOS-compatible process listing
 zstyle ':fzf-tab:complete:(kill|ps):argument-rest' fzf-preview \
