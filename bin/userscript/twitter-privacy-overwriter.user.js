@@ -5,6 +5,9 @@
 // @description  Disable X personalization preferences when auth tokens are available.
 // @author       Gholts
 // @license      GNU Affero General Public License v3.0
+// @homepageURL  https://github.com/Gholts/Dotfiles/tree/main/bin/userscript
+// @updateURL    https://raw.githubusercontent.com/Gholts/Dotfiles/main/bin/userscript/twitter-privacy-overwriter.user.js
+// @downloadURL  https://raw.githubusercontent.com/Gholts/Dotfiles/main/bin/userscript/twitter-privacy-overwriter.user.js
 // @match        https://x.com/*
 // @match        https://twitter.com/*
 // @grant        unsafeWindow

@@ -5,6 +5,9 @@
 // @description  Lock preferred Gemini model, normalize send hotkeys, and trim noisy UI.
 // @author       Gholts
 // @license      GNU Affero General Public License v3.0
+// @homepageURL  https://github.com/Gholts/Dotfiles/tree/main/bin/userscript
+// @updateURL    https://raw.githubusercontent.com/Gholts/Dotfiles/main/bin/userscript/gemini-kit.user.js
+// @downloadURL  https://raw.githubusercontent.com/Gholts/Dotfiles/main/bin/userscript/gemini-kit.user.js
 // @icon         https://www.gstatic.com/lamda/images/gemini_sparkle_aurora_33f86dc0c0257da337c63.svg
 // @match        https://gemini.google.com/*
 // @run-at       document-start

@@ -5,6 +5,9 @@
 // @description  Show Traditional Chinese translation under the active Monkeytype word.
 // @author       Gholts
 // @license      GNU Affero General Public License v3.0
+// @homepageURL  https://github.com/Gholts/Dotfiles/tree/main/bin/userscript
+// @updateURL    https://raw.githubusercontent.com/Gholts/Dotfiles/main/bin/userscript/monkeytype-traditional-chinese-translation-tw.user.js
+// @downloadURL  https://raw.githubusercontent.com/Gholts/Dotfiles/main/bin/userscript/monkeytype-traditional-chinese-translation-tw.user.js
 // @match        https://monkeytype.com/*
 // @grant        GM_xmlhttpRequest
 // @connect      translate.googleapis.com

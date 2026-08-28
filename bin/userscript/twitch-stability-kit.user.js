@@ -5,6 +5,9 @@
 // @description  Ad suppression, max quality, channel points, live recovery, UI cleanup, and gentle playback keepalive for Twitch.
 // @author       Gholts
 // @license      GNU Affero General Public License v3.0
+// @homepageURL  https://github.com/Gholts/Dotfiles/tree/main/bin/userscript
+// @updateURL    https://raw.githubusercontent.com/Gholts/Dotfiles/main/bin/userscript/twitch-stability-kit.user.js
+// @downloadURL  https://raw.githubusercontent.com/Gholts/Dotfiles/main/bin/userscript/twitch-stability-kit.user.js
 // @match        https://www.twitch.tv/*
 // @match        https://player.twitch.tv/*
 // @match        https://embed.twitch.tv/*
@@ -12,8 +15,6 @@
 // @run-at       document-start
 // @inject-into  page
 // @sandbox      raw
-// @downloadURL  none
-// @updateURL    none
 // @grant        GM_registerMenuCommand
 // @grant        GM_unregisterMenuCommand
 // @grant        GM_getValue

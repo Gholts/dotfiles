@@ -5,6 +5,9 @@
 // @description  Find and copy RSS, Atom, and JSON feeds for the current page.
 // @author       Gholts
 // @license      GNU Affero General Public License v3.0
+// @homepageURL  https://github.com/Gholts/Dotfiles/tree/main/bin/userscript
+// @updateURL    https://raw.githubusercontent.com/Gholts/Dotfiles/main/bin/userscript/any-feed-finder.user.js
+// @downloadURL  https://raw.githubusercontent.com/Gholts/Dotfiles/main/bin/userscript/any-feed-finder.user.js
 // @match        *://*/*
 // @connect      *
 // @grant        GM_getValue

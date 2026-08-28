@@ -5,6 +5,9 @@
 // @description  Add GitHub-style jumps between blob pages and raw.githubusercontent.com.
 // @author       Gholts
 // @license      GNU Affero General Public License v3.0
+// @homepageURL  https://github.com/Gholts/Dotfiles/tree/main/bin/userscript
+// @updateURL    https://raw.githubusercontent.com/Gholts/Dotfiles/main/bin/userscript/github-jump-to-githubusercontent.user.js
+// @downloadURL  https://raw.githubusercontent.com/Gholts/Dotfiles/main/bin/userscript/github-jump-to-githubusercontent.user.js
 // @match        https://github.com/*/*
 // @match        https://raw.githubusercontent.com/*/*/*
 // @icon         https://github.githubassets.com/favicons/favicon.svg

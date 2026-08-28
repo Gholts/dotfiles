@@ -5,6 +5,9 @@
 // @description  Bulk-block X Lists and Communities and add native-style block controls to posts and account rows.
 // @author       Gholts
 // @license      GNU Affero General Public License v3.0
+// @homepageURL  https://github.com/Gholts/Dotfiles/tree/main/bin/userscript
+// @updateURL    https://raw.githubusercontent.com/Gholts/Dotfiles/main/bin/userscript/twitter-block-toolkit.user.js
+// @downloadURL  https://raw.githubusercontent.com/Gholts/Dotfiles/main/bin/userscript/twitter-block-toolkit.user.js
 // @match        https://x.com/*
 // @match        https://twitter.com/*
 // @grant        unsafeWindow

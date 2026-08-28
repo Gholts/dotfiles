@@ -5,6 +5,9 @@
 // @description  Hold a key to speed up playing videos, release to restore.
 // @author       Gholts
 // @license      GNU Affero General Public License v3.0
+// @homepageURL  https://github.com/Gholts/Dotfiles/tree/main/bin/userscript
+// @updateURL    https://raw.githubusercontent.com/Gholts/Dotfiles/main/bin/userscript/any-temporary-speed-hardened.user.js
+// @downloadURL  https://raw.githubusercontent.com/Gholts/Dotfiles/main/bin/userscript/any-temporary-speed-hardened.user.js
 // @match        *://*/*
 // @grant        GM_setValue
 // @grant        GM_getValue

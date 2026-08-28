@@ -5,6 +5,9 @@
 // @description  Keep macOS video fullscreen inside the browser window and preserve rapid play/pause clicks.
 // @author       Gholts
 // @license      GNU Affero General Public License v3.0
+// @homepageURL  https://github.com/Gholts/Dotfiles/tree/main/bin/userscript
+// @updateURL    https://raw.githubusercontent.com/Gholts/Dotfiles/main/bin/userscript/video-browser-fullscreen.user.js
+// @downloadURL  https://raw.githubusercontent.com/Gholts/Dotfiles/main/bin/userscript/video-browser-fullscreen.user.js
 // @match        http://*/*
 // @match        https://*/*
 // @grant        none
